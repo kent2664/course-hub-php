@@ -39,7 +39,7 @@
                 break;
                 case "courses":
                     //implement the feature that takes course info with $courseService
-                    echo "called ";
+                    //echo "called ";
                     print_r($courseService->getCourseList());
                 break;
             }
