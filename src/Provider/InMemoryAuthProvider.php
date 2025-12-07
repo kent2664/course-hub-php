@@ -1,7 +1,7 @@
 <?php 
 
     namespace App\Auth;
-    use App\Contracts\AuthProviderInterface;
+    use App\Interface\AuthProviderInterface;
 
     class InMemoryAuthProvider implements AuthProviderInterface{
         private array $users = [

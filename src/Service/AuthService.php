@@ -1,7 +1,7 @@
 <?php 
 
   namespace App\Services;
-  use App\Contracts\AuthProviderInterface;
+  use App\Interface\AuthProviderInterface;
   class AuthService{
     private AuthProviderInterface $provider;
     function __construct(AuthProviderInterface $provider){
