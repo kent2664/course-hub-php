@@ -1,12 +1,23 @@
 <?php 
-    require __DIR__.'/../src/interface/AuthProviderInterface.php';
+    require __DIR__.'/../src/Interface/AuthProviderInterface.php';
+    require __DIR__.'/../src/Interface/CourseProviderInterface.php';
     require __DIR__.'/../src/Provider/InMemoryAuthProvider.php';
+    require __DIR__.'/../src/Provider/InMemoryCourseProvider.php';
     require __DIR__.'/../src/Service/AuthService.php';
+    require __DIR__.'/../src/Service/CourseService.php';
+    require __DIR__.'/../src/Model/Course.php';
     use App\Auth\InMemoryAuthProvider;
+    use App\Course\InMemoryCourseProvider;
     use App\Services\AuthService;
+    use App\Services\CourseService;
 
-    $provider = new InMemoryAuthProvider();
-    $authService = new AuthService($provider); //connecting the implementor class which implements the interface to the class which consumes the interface.
+    $authProvider = new InMemoryAuthProvider();
+    $authService = new AuthService($authProvider); //connecting the implementor class which implements the interface to the class which consumes the interface.
+
+    //define course service with provider
+    $courseProvider = new InMemoryCourseProvider();
+    $courseService = new CourseService($courseProvider); //connecting the implementor class which implements the interface to the class which consumes the interface.
+
 
     // sample codes
     // echo $authService->status() . "</br>";
@@ -28,6 +39,8 @@
                 break;
                 case "courses":
                     //implement the feature that takes course info with $courseService
+                    echo "called ";
+                    print_r($courseService->getCourseList());
                 break;
             }
             break;
@@ -36,8 +49,8 @@
             switch(basename($_SERVER["PATH_INFO"])){
                 case "login":
                     //implement login feature with $authService
-                    // echo $authService->attemptLogin('alice',"password123");
-                    // echo $authService->status()."</br>";
+                    echo $authService->attemptLogin('alice',"password123");
+                    echo $authService->status()."</br>";
                 break;
             }
             break;
