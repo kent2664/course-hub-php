@@ -19,7 +19,7 @@
 
     function searchCourseList(string $target, string $searchTxt): array{
       $returnCourseList = [];
-      switch(target){
+      switch($target){
         case "title":
           $returnCourseList = $this->provider->searchCourseTitle($searchTxt);
           break;
