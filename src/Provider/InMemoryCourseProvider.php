@@ -38,7 +38,7 @@
         public function searchCourseTitle(string $title):array
         {
             //this should access DB with SQL
-            $filteredCourses = array_filter($this->courses, function ($course) {
+            $filteredCourses = array_filter($this->courses, function ($course) use ($title){
                 return $course->title === $title;
             });
             return $filteredCourses;
