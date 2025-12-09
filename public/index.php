@@ -42,6 +42,18 @@
                     //echo "called ";
                     print_r($courseService->getCourseList());
                 break;
+                case "searchcourse":
+                    //login check needed
+                     $authService->status();//check login status
+                    //implement the feature that takes course info with $courseService
+                    if(isset($_REQUEST["target"]) && isset($_REQUEST["searchtxt"])){
+                        //sanitize input
+                        $target = htmlspecialchars($_REQUEST["target"], ENT_QUOTES, 'UTF-8');
+                        $searchtxt = htmlspecialchars($_REQUEST["searchtxt"], ENT_QUOTES, 'UTF-8');
+                        print_r($courseService->searchCourseList($target,$searchtxt));
+                    }else{
+                        echo "Invalid search request.";
+                    }
             }
             break;
         case "POST":
