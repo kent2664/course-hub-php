@@ -64,7 +64,7 @@
                     if(isset($_POST["username"]) && isset($_POST["password"])){
                         // Sanitizin data received (ENT_QUOTES protect single quotation, transforming then into codes)
                         $username = htmlspecialchars($_POST["username"], ENT_QUOTES, 'UTF-8');
-                        $password = htmlspecialchars($_POST["password"], ENT_QUOTES, 'UTF-8');
+                        $password = $_POST["password"];
                         echo $authService->attemptLogin($username, $password);
                         print_r($authService->status())."</br>";
                     }else{
