@@ -14,7 +14,7 @@
         return "Login failed. Invalid credentials.";
 
     }
-    function status(): array{
+    function status(){
         if($this->provider->isAuthenticated()){
             $user = $this->provider->getCurrentUser();
             return $user;
