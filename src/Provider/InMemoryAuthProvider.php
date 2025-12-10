@@ -14,13 +14,14 @@
 
         public function login(string $username, string $password): bool
         {
+            // Looping through users array
             foreach($this->users as $user){
-                // print_r($this->users);
                 if(isset($user["username"]) && $user['username'] == $username && $user['password'] === $password){
                     $this->currentUser = $user;
                     return true;
                 }
             }
+            // If is different from what was requested, return false
             return false;
         }
 

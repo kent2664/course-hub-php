@@ -14,10 +14,10 @@
         return "Login failed. Invalid credentials.";
 
     }
-    function status(): string{
+    function status(): array{
         if($this->provider->isAuthenticated()){
             $user = $this->provider->getCurrentUser();
-            return "User '{$user['username']}' is authenticated.";
+            return $user;
         }
 
         return "No user is currently authenticated.";

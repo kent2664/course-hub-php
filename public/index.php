@@ -61,9 +61,15 @@
             switch(basename($_SERVER["PATH_INFO"])){
                 case "login":
                     //implement login feature with $authService
-                    echo $authService->attemptLogin('kenta',"kenta123");
-                    echo $authService->status()."</br>";
-                    
+                    if(isset($_POST["username"]) && isset($_POST["password"])){
+                        // Sanitizin data received (ENT_QUOTES protect single quotation, transforming then into codes)
+                        $username = htmlspecialchars($_POST["username"], ENT_QUOTES, 'UTF-8');
+                        $password = htmlspecialchars($_POST["password"], ENT_QUOTES, 'UTF-8');
+                        echo $authService->attemptLogin($username, $password);
+                        print_r($authService->status())."</br>";
+                    }else{
+                        echo "Invalid login request.";
+                    }
                 break;
             }
             break;
