@@ -15,12 +15,13 @@
         public function login(string $username, string $password): bool
         {
             foreach($this->users as $user){
-                if(isset($user[$username]) && $user[$password] === $password){
+                // print_r($this->users);
+                if(isset($user["username"]) && $user['username'] == $username && $user['password'] === $password){
                     $this->currentUser = $user;
                     return true;
                 }
-                return false;
             }
+            return false;
         }
 
         public function logout():void{

@@ -17,7 +17,7 @@
     function status(): string{
         if($this->provider->isAuthenticated()){
             $user = $this->provider->getCurrentUser();
-            return "User '{$user}' is authenticated.";
+            return "User '{$user['username']}' is authenticated.";
         }
 
         return "No user is currently authenticated.";
