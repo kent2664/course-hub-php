@@ -5,19 +5,22 @@
 
     class InMemoryAuthProvider implements AuthProviderInterface{
         private array $users = [
-            'alice' => 'password123',
-            'bob'   => 'secret',
+            ['username' => 'matheus','password'=> 'matheus123', 'role'=>'student'],
+            ['username' => 'kenta','password'=> 'kenta123', 'role'=>'admin'],
+            ['username' => 'tiana','password'=> 'tiana123', 'role'=>'teacher']
         ];
 
-        private ?string $currentUser = null; //"?" means either the value should be a string or null
+        private ?array $currentUser = null; //"?" means either the value should be a string or null
 
         public function login(string $username, string $password): bool
         {
-            if(isset($this->users[$username]) && $this->users[$username] === $password){
-                $this->currentUser = $username;
-                return true;
+            foreach($this->users as $user){
+                if(isset($user[$username]) && $user[$password] === $password){
+                    $this->currentUser = $user;
+                    return true;
+                }
+                return false;
             }
-            return false;
         }
 
         public function logout():void{
@@ -29,7 +32,7 @@
             return $this->currentUser !== null;
         }
 
-        public function getCurrentUser(): ?string{
+        public function getCurrentUser(): ?array{
             return $this->currentUser;
         }
     }

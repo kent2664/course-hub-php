@@ -8,7 +8,7 @@
 
         public function isAuthenticated(): bool;
 
-        public function getCurrentUser(): ?string;
+        public function getCurrentUser(): ?array;
     }
 
 
