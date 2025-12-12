@@ -60,7 +60,7 @@
             // when the form submit, this case will be executed.
             switch(basename($_SERVER["PATH_INFO"])){
                 case "login":
-                    //implement login feature with $authService
+                     //implement login feature with $authService
                     echo $authService->attemptLogin('alice',"password123");
                     echo $authService->status()."</br>";
                 break;
