@@ -60,36 +60,9 @@
             // when the form submit, this case will be executed.
             switch(basename($_SERVER["PATH_INFO"])){
                 case "login":
-                    $errFlag = false;
-                    $db = new mysqli(DB_SERVER, DB_USER, DB_PASSWORD, DB_NAME);
-                    if($db->connect_error){
-                        throw new Exception("Database connection failed: ".$db->connect_error, $db->connect_errno);
-                    }
-                    //implement login feature with $authService
-                     $loadUser = $db->prepare("SELECT * FROM user_tb WHERE email=?");
-
-                     $loadUser->bind_param("s",$email);
-                     $email = $_POST["email"];
-                     $loadUser->execute();
-                     $result = $loadUser->get_result();
-                     if($result->num_rows == 1){
-                         $user = $result->fetch_assoc();
-                         if(password_verify($_POST["pass"],$user["pass"])){
-                             //login success
-                             $_SESSION["uid"] = $user["uid"];
-                             echo "Login successful.";
-                         }else{
-                            throw new Exception("Login failed.",401);
-                             //login failed
-                             echo "Invalid email or password.";
-                         }
-                      }else{
-                        $errFlag = true;
-                        throw new Exception("Record loading failed.",500);
-                         echo "Invalid email or password.";
-                     }
-                     $loadUser->close();
-                     $db->close();
+                     //implement login feature with $authService
+                    echo $authService->attemptLogin('alice',"password123");
+                    echo $authService->status()."</br>";
                 break;
             }
             break;
