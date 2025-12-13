@@ -1,5 +1,5 @@
 <?php 
-    session_start(); // Start the session
+    session_start();
     
     require __DIR__.'/../src/Interface/AuthProviderInterface.php';
     require __DIR__.'/../src/Interface/CourseProviderInterface.php';
@@ -9,6 +9,7 @@
     require __DIR__.'/../src/Service/CourseService.php';
     require __DIR__.'/../src/Service/AuditService.php';
     require __DIR__.'/../src/Model/Course.php';
+    require __DIR__.'/../src/validation.php';
     use App\Auth\InMemoryAuthProvider;
     use App\Course\InMemoryCourseProvider;
     use App\Services\AuthService;
@@ -56,8 +57,8 @@
                     //implement the feature that takes course info with $courseService
                     if(isset($_REQUEST["target"]) && isset($_REQUEST["searchtxt"])){
                         //sanitize input
-                        $target = htmlspecialchars($_REQUEST["target"], ENT_QUOTES, 'UTF-8');
-                        $searchtxt = htmlspecialchars($_REQUEST["searchtxt"], ENT_QUOTES, 'UTF-8');
+                        $target = input_sanitizer($_REQUEST["target"], 'text');
+                        $searchtxt = input_sanitizer($_REQUEST["searchtxt"], 'text');
                         print_r($courseService->searchCourseList($target,$searchtxt));
                     }else{
                         echo "Invalid search request.";
@@ -69,19 +70,19 @@
             switch(basename($_SERVER["PATH_INFO"])){
                 case "login":
                     //implement login feature with $authService
-                    if(isset($_POST["username"]) && isset($_POST["password"])){
-                        // Sanitizin data received (ENT_QUOTES protect single quotation, transforming then into codes)
-                        $username = htmlspecialchars($_POST["username"], ENT_QUOTES, 'UTF-8');
-                        $password = $_POST["password"];
+                    if(isset($_POST["email"]) && isset($_POST["password"])){
+                        // Sanitized data received using input_sanitizer function
+                        $email = input_sanitizer($_POST["email"], 'email');
+                        $password = password_hash(input_sanitizer($_POST["password"], 'pass'),PASSWORD_BCRYPT,['cost'=>10]);
                         
                         // Login attempt
-                        $loginSuccess = $authService->attemptLogin($username, $password);
+                        $loginSuccess = $authService->attemptLogin($email, $password);
                         // Audit the login
                         $ip = $_SERVER['REMOTE_ADDR'] ?? 'UNKNOWN';
-                        $auditService->logLogin($username, strpos($loginSuccess, 'successful') !== false, $ip);
+                        $auditService->logLogin($email, strpos($loginSuccess, 'successful') !== false, $ip);
                         
                         if(strpos($loginSuccess, 'successful') !== false){
-                            $_SESSION["username"] = $username;
+                            $_SESSION["email"] = $email;
                             $_SESSION["authenticated"] = true;
                             echo "Login successful!";
                         } else {
