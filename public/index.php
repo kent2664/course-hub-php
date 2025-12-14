@@ -3,11 +3,14 @@
     require __DIR__.'/../src/Interface/CourseProviderInterface.php';
     require __DIR__.'/../src/Provider/InMemoryAuthProvider.php';
     require __DIR__.'/../src/Provider/InMemoryCourseProvider.php';
+    require __DIR__.'/../src/Provider/dataCourseProvider.php';
     require __DIR__.'/../src/Service/AuthService.php';
     require __DIR__.'/../src/Service/CourseService.php';
     require __DIR__.'/../src/Model/Course.php';
+
     use App\Auth\InMemoryAuthProvider;
-    use App\Course\InMemoryCourseProvider;
+    //use App\Course\InMemoryCourseProvider;
+    use App\Course\dataCourseProvider;
     use App\Services\AuthService;
     use App\Services\CourseService;
 
@@ -15,7 +18,7 @@
     $authService = new AuthService($authProvider); //connecting the implementor class which implements the interface to the class which consumes the interface.
 
     //define course service with provider
-    $courseProvider = new InMemoryCourseProvider();
+    $courseProvider = new dataCourseProvider();
     $courseService = new CourseService($courseProvider); //connecting the implementor class which implements the interface to the class which consumes the interface.
 
 
@@ -40,13 +43,13 @@
                 case "courses":
                     //implement the feature that takes course info with $courseService
                     //echo "called ";
-                    print_r($courseService->getCourseList());
+                    echo json_encode($courseService->getCourseList());
                 break;
                 case "searchcourse":
                     //login check needed
                      $authService->status();//check login status
                     //implement the feature that takes course info with $courseService
-                    if(isset($_REQUEST["target"]) && isset($_REQUEST["searchtxt"])){
+                    if(isset($_REQUEST["target"]) || isset($_REQUEST["searchtxt"])){
                         //sanitize input
                         $target = htmlspecialchars($_REQUEST["target"], ENT_QUOTES, 'UTF-8');
                         $searchtxt = htmlspecialchars($_REQUEST["searchtxt"], ENT_QUOTES, 'UTF-8');
