@@ -1,6 +1,7 @@
 <?php
 
-function input_sanitizer(?string $value, string $type = 'text'): ?string{
+function input_sanitizer(?string $value, string $type = 'text'): ?string
+{
     $value = trim($value);
     if ($value === null)
         return null;
@@ -20,6 +21,17 @@ function input_sanitizer(?string $value, string $type = 'text'): ?string{
             $value = htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
             return $value === '' ? null : $value;
     }
+}
+function checkKeys(string ...$keys): bool
+{
+    foreach ($keys as $key) {
+        if (!isset($_REQUEST[$key])) {
+            throw new Exception("Invalid request.", 400);
+        } else {
+            $_REQUEST[$key] = input_sanitizer($_REQUEST[$key], $key);
+        }
+    }
+    return true;
 }
 
 ?>

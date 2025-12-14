@@ -5,18 +5,18 @@
 
     class InMemoryAuthProvider implements AuthProviderInterface{
         private array $users = [
-            ['username' => 'matheus','password'=> 'matheus123', 'role'=>'student'],
-            ['username' => 'kenta','password'=> 'kenta123', 'role'=>'admin'],
-            ['username' => 'tiana','password'=> 'tiana123', 'role'=>'teacher']
+            ['email' => 'matheus@gmail.com','password'=> 'matheus123', 'role'=>'student'],
+            ['email' => 'kenta@gmail.com','password'=> 'kenta123', 'role'=>'admin'],
+            ['email' => 'tiana@gmail.com','password'=> 'tiana123', 'role'=>'teacher']
         ];
 
         private ?array $currentUser = null; //"?" means either the value should be a string or null
 
-        public function login(string $username, string $password): bool
+        public function login(string $email, string $password): bool
         {
             // Looping through users array
             foreach($this->users as $user){
-                if(isset($user["username"]) && $user['username'] == $username && $user['password'] === $password){
+                if(isset($user["email"]) && $user['email'] == $email && $user['password'] === $password){
                     $this->currentUser = $user;
                     return true;
                 }

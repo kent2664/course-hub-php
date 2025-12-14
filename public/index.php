@@ -10,6 +10,8 @@
     require __DIR__.'/../src/Service/AuditService.php';
     require __DIR__.'/../src/Model/Course.php';
     require __DIR__.'/../src/validation.php';
+    require __DIR__.'/../src/Service/Functions.php';
+    require __DIR__.'/../src/Service/webconfig.php';
     use App\Auth\InMemoryAuthProvider;
     use App\Course\InMemoryCourseProvider;
     use App\Services\AuthService;
@@ -32,6 +34,8 @@
 
     // $provider->logout();
     // echo $authService->status(). "</br>";
+    try{
+        $errFlag = false;
         switch($_SERVER["REQUEST_METHOD"]){
         case "GET":
             //check the APi is booklist
@@ -41,6 +45,8 @@
                         $auditService->logLogout($_SESSION["username"]);
                         session_destroy();
                         echo "Logged out successfully!";
+                    } else{
+                        throw new Exception("Logout error",400);
                     }
                 break;
                 case "mywork":
@@ -68,6 +74,10 @@
         case "POST":
             // when the form submit, this case will be executed.
             switch(basename($_SERVER["PATH_INFO"])){
+                case "register":
+                    checkKeys("email","password","role");
+                    registerUser($_REQUEST["email"],$_REQUEST["password"],$_REQUEST["role"]);
+                break;
                 case "login":
                     //implement login feature with $authService
                     if(isset($_POST["email"]) && isset($_POST["password"])){
@@ -84,7 +94,7 @@
                         if(strpos($loginSuccess, 'successful') !== false){
                             $_SESSION["email"] = $email;
                             $_SESSION["authenticated"] = true;
-                            echo "Login successful!";
+                            echo "Login successful! {$_SESSION["email"]}";
                         } else {
                             echo "Login failed!";
                         }
@@ -95,6 +105,10 @@
             }
             break;
 
+        }
+    }catch(Exception $err){
+        http_response_code($err->getCode());
+        echo "Error: ".$err->getMessage();
     }
 
 ?>
