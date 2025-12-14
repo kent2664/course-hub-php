@@ -1,4 +1,7 @@
 <?php
+
+use Src\Common\Response;
+
 function registerUser($email, $password, $role, $deleteFlag = 0)
 {
     $errFlag = false;
@@ -10,7 +13,7 @@ function registerUser($email, $password, $role, $deleteFlag = 0)
     $selectPrep = $db->prepare("SELECT userId FROM `users` WHERE email=?");
     $selectPrep->bind_param("s", $email);
     $pass = password_hash($password, PASSWORD_BCRYPT, ['cost' => 10]);
-    $insertPrep->bind_param("ssss", $password, $email, $role, $deleteFlag);
+    $insertPrep->bind_param("sssi", $password, $email, $role, $deleteFlag);
     $selectPrep->execute();
     $result = $selectPrep->get_result();
     if ($result->num_rows > 0)
@@ -21,8 +24,10 @@ function registerUser($email, $password, $role, $deleteFlag = 0)
     }
     $db->close();
     if (!$errFlag)
-        echo "Record added";
-    else
+        Response::json([],200,"Record Added");
+    else{
+        Response::json([],400,"Record insertion failed.");
         throw new Exception("Record insertion failed.", 500);
+    }
 }
 ?>

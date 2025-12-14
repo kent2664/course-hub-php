@@ -10,6 +10,7 @@
     require __DIR__.'/../src/Service/AuditService.php';
     require __DIR__.'/../src/Model/Course.php';
     require __DIR__.'/../src/validation.php';
+    require __DIR__.'/../src/Common/Response.php';
     require __DIR__.'/../src/Service/Functions.php';
     require __DIR__.'/../src/Service/webconfig.php';
     use App\Auth\InMemoryAuthProvider;
@@ -79,7 +80,8 @@
                     registerUser($_REQUEST["email"],$_REQUEST["password"],$_REQUEST["role"]);
                 break;
                 case "login":
-                    //implement login feature with $authService
+                    checkKeys("email","password");
+                    // Implement login feature with $authService
                     if(isset($_POST["email"]) && isset($_POST["password"])){
                         // Sanitized data received using input_sanitizer function
                         $email = input_sanitizer($_POST["email"], 'email');
@@ -108,7 +110,7 @@
         }
     }catch(Exception $err){
         http_response_code($err->getCode());
-        echo "Error: ".$err->getMessage();
+        // echo "Error: ".$err->getMessage();
     }
 
 ?>
