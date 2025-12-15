@@ -55,6 +55,35 @@
             return $filteredCourses;
         }
 
+        //Insert Course
+        public function insertCourse(Course $course): bool
+        {
+            array_push($this->courses, $course);
+            return true;
+        }
+        //Update Course
+        public function updateCourse(Course $course): bool
+        {
+            foreach($this->courses as $index => $existingCourse){
+                if($existingCourse->id === $course->id){
+                    $this->courses[$index] = $course;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        //Delete Course
+        public function deleteCourse(string $courseId): bool
+        {
+            foreach($this->courses as $index => $existingCourse){
+                if($existingCourse->id === $courseId){
+                    array_splice($this->courses, $index, 1);
+                    return true;
+                }
+            }
+            return false;
+        }
 
     }
 

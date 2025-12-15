@@ -2,6 +2,7 @@
 
   namespace App\Services;
   use App\Interface\CourseProviderInterface;
+  use App\Model\Course;
   class CourseService{
     private CourseProviderInterface $provider;
 
@@ -31,6 +32,16 @@
       return $returnCourseList;
     }
 
+    function insertCourse(Course $courseData): bool{
+      return $this->provider->insertCourse($courseData);
+    }
+
+    function updateCourse(Course $courseData): bool{
+      return $this->provider->updateCourse($courseData);
+    }
+    function deleteCourse(string $courseId): bool{
+      return $this->provider->deleteCourse($courseId);
+    }
     
   }
 
