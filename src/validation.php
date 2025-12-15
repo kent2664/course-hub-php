@@ -1,5 +1,7 @@
 <?php
 
+use Src\Common\Response;
+
 function input_sanitizer(?string $value, string $type = 'text'): ?string
 {
     $value = trim($value);
@@ -26,6 +28,7 @@ function checkKeys(string ...$keys): bool
 {
     foreach ($keys as $key) {
         if (!isset($_REQUEST[$key])) {
+            Response::json([],400,"Missing keys");
             throw new Exception("Invalid request.", 400);
         } else {
             $_REQUEST[$key] = input_sanitizer($_REQUEST[$key], $key);

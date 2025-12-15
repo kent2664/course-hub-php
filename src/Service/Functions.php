@@ -12,7 +12,7 @@ function registerUser($email, $password, $role, $deleteFlag = 0)
     $insertPrep = $db->prepare("INSERT INTO `users` (passWord,email,role,deleteFlag) VALUES (?,?,?,?)");
     $selectPrep = $db->prepare("SELECT userId FROM `users` WHERE email=?");
     $selectPrep->bind_param("s", $email);
-    $pass = password_hash($password, PASSWORD_BCRYPT, ['cost' => 10]);
+    $password = password_hash($password, PASSWORD_BCRYPT, ['cost' => 10]);
     $insertPrep->bind_param("sssi", $password, $email, $role, $deleteFlag);
     $selectPrep->execute();
     $result = $selectPrep->get_result();
@@ -24,10 +24,9 @@ function registerUser($email, $password, $role, $deleteFlag = 0)
     }
     $db->close();
     if (!$errFlag)
-        Response::json([],200,"Record Added");
-    else{
-        Response::json([],400,"Record insertion failed.");
-        throw new Exception("Record insertion failed.", 500);
+        Response::json([], 200, "Record Added");
+    else {
+        Response::json([], 400, "Record insertion failed.");
     }
 }
 ?>
