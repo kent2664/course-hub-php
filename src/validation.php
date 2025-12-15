@@ -14,7 +14,7 @@ function input_sanitizer(?string $value, string $type = 'text'): ?string
             if (!filter_var($value, FILTER_VALIDATE_EMAIL))
                 return null;
             return $value;
-        case "pass":
+        case "password":
             // Sanitize the password, removing those characters that can break the password (breaking a line, for example)
             $value = str_replace(["\r", "\n"], '', $value);
             return $value;

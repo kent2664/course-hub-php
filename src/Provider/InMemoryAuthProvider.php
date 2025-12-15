@@ -14,14 +14,19 @@
 
         public function login(string $email, string $password): bool
         {
-            // Looping through users array
-            foreach($this->users as $user){
-                if(isset($user["email"]) && $user['email'] == $email && $user['password'] === $password){
+            // Looping through users array and support both plain and hashed passwords
+            foreach ($this->users as $user) {
+                if (!isset($user["email"]) || $user['email'] != $email) continue;
+
+                $stored = $user['password'];
+
+                if (password_verify($password, $stored)) {
                     $this->currentUser = $user;
                     return true;
                 }
             }
-            // If is different from what was requested, return false
+
+            // If no match, return false
             return false;
         }
 
