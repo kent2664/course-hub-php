@@ -7,7 +7,13 @@
     require __DIR__.'/../src/Service/AuthService.php';
     require __DIR__.'/../src/Service/CourseService.php';
     require __DIR__.'/../src/Model/Course.php';
-
+    require __DIR__ . '/../src/Service/AuditService.php';
+    require __DIR__ . '/../src/validation.php';
+    require __DIR__ . '/../src/Common/Response.php';
+    require __DIR__ . '/../src/Service/Functions.php';
+    require __DIR__ . '/../src/Service/webconfig.php';
+    require __DIR__ . '/../src/Provider/dataAuthProvider.php';
+    
     use App\Auth\InMemoryAuthProvider;
     //use App\Course\InMemoryCourseProvider;
     use App\Course\dataCourseProvider;
@@ -18,29 +24,19 @@
 use App\Providers\DataAuthProvider;
 session_start();
 
-require __DIR__ . '/../src/Service/AuditService.php';
-require __DIR__ . '/../src/validation.php';
-require __DIR__ . '/../src/Common/Response.php';
-require __DIR__ . '/../src/Service/Functions.php';
-require __DIR__ . '/../src/Service/webconfig.php';
-require __DIR__ . '/../src/Provider/dataAuthProvider.php';
-use App\Auth\InMemoryAuthProvider;
+
 use App\Course\InMemoryCourseProvider;
-use App\Services\AuthService;
-use App\Services\CourseService;
 use App\Services\AuditService;
 use Src\Common\Response;
-    //define course service with provider
-    $courseProvider = new dataCourseProvider();
-    $courseService = new CourseService($courseProvider); //connecting the implementor class which implements the interface to the class which consumes the interface.
+
+//define course service with provider
+$courseProvider = new dataCourseProvider();
+$courseService = new CourseService($courseProvider); //connecting the implementor class which implements the interface to the class which consumes the interface.
 
 $authProvider = new DataAuthProvider();
 // $authProvider = new InMemoryAuthProvider();
 $authService = new AuthService($authProvider); //connecting the implementor class which implements the interface to the class which consumes the interface.
 
-//define course service with provider
-$courseProvider = new InMemoryCourseProvider();
-$courseService = new CourseService($courseProvider); //connecting the implementor class which implements the interface to the class which consumes the interface.
 $auditService = new AuditService();
 
 // sample codes
