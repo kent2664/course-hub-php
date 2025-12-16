@@ -105,13 +105,18 @@ try {
             // when the form submit, this case will be executed.
             switch (basename($_SERVER["PATH_INFO"])) {
                 case "register":
+                    // Check and sanitize keys
                     checkKeys("email", "password", "role");
+                    // Call the registerUser function
                     registerUser($_REQUEST["email"], $_REQUEST["password"], $_REQUEST["role"]);
                     break;
                 case "login":
+                    // Check and sanitize the keys
                     checkKeys("email", "password");
+                    // Define variables
                     $email = $_REQUEST["email"];
                     $password = $_REQUEST["password"];
+                    // Call the 
                     $authProvider->login($email,$password);
                     break;
             }
