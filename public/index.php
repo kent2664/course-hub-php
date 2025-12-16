@@ -1,8 +1,8 @@
 <?php 
-    session_start();
-    ini_set('display_errors', 1);
-    ini_set('display_startup_errors', 1);
-    error_reporting(E_ALL);
+    // session_start();
+    // ini_set('display_errors', 1);
+    // ini_set('display_startup_errors', 1);
+    // error_reporting(E_ALL);
     
     require __DIR__.'/../src/Interface/AuthProviderInterface.php';
     require __DIR__.'/../src/Interface/CourseProviderInterface.php';
@@ -17,15 +17,16 @@
     require __DIR__.'/../src/Service/Functions.php';
     require __DIR__.'/../src/Service/webconfig.php';
     require __DIR__.'/../src/Interface/MyWorkProviderInterface.php'; //interface
-    require __DIR__.'/../src/Provider/InMemoryMyWorkProvider.php'; //data processing
+    require __DIR__.'/../src/Provider/DbMyWorkProvider.php'; //data processing
     require __DIR__.'/../src/Service/MyWorkService.php';//business logic
     use App\Auth\InMemoryAuthProvider;
     use App\Course\InMemoryCourseProvider;
     use App\Services\AuthService;
     use App\Services\CourseService;
     use App\Services\AuditService;
-    use App\MyWork\InMemoryMyWorkProvider;
+    // use App\MyWork\InMemoryMyWorkProvider;
     use App\Services\MyWorkService;
+    use App\MyWork\DbMyWorkProvider;
 
     $authProvider = new InMemoryAuthProvider();
     $authService = new AuthService($authProvider); //connecting the implementor class which implements the interface to the class which consumes the interface.
@@ -34,9 +35,10 @@
     $courseProvider = new InMemoryCourseProvider();
     $courseService = new CourseService($courseProvider); //connecting the implementor class which implements the interface to the class which consumes the interface.
     $auditService = new AuditService();
-    $myworkProvider = new InMemoryMyWorkProvider(); // creates a provider object to handle MyWork data.
-    $myworkService = new MyWorkService($myworkProvider, $authService); //for MyWork business logic, injecting the $authService for permission checks.
-
+    // $myworkProvider = new InMemoryMyWorkProvider(); // creates a provider object to handle MyWork data.
+    // $myworkService = new MyWorkService($myworkProvider, $authService); //for MyWork business logic, injecting the $authService for permission checks.
+    $myworkProvider = new DbMyWorkProvider($pdo);
+    $myworkService = new MyWorkService($myworkProvider, $authService);
     
 
     // sample codes
@@ -66,15 +68,19 @@
                 case "mywork":
                     // --- CONSOLIDATED MYWORK GET REQUESTS ---
                     // This endpoint handles both /mywork?author=X and /mywork?student=Y queries.
+                    
                     // 1.login check
-                    if ($authService->status() !== 'logged_in') {
-                        header('Content-Type: application/json');
-                        http_response_code(401); // Unauthorized
-                        echo json_encode(["success" => false, "message" => "Login is required to access MyWork data."]);
-                    } 
+                    session_start(); 
+                    // if ($authService->status() !== 'logged_in') {
+                    //     header('Content-Type: application/json');
+                    //     http_response_code(401); // Unauthorized
+                    //     echo json_encode(["success" => false, "message" => "Login is required to access MyWork data."]);
+                    //     break;
+                    // } 
 
                     // 2. query (JSON)
                     header('Content-Type: application/json');
+                    $currentUser = $_SESSION["email"] ?? 'unknown';
                     
                     if(isset($_GET["author"])){
                          // 2-1 Filter by Author: Handles requests like /mywork?author=Alice
@@ -87,7 +93,7 @@
                             "message" => "My work data filtered by {$author}"
                         ]);
                     } else if(isset($_GET["student"])) {
-                         // 2-2 Filter by Student: Handles requests like /mywork?student=John
+                         // 2-2 Filter by Student(for admin & author): Handles requests like /mywork?student=John
                         $student = htmlspecialchars($_GET["student"], ENT_QUOTES, 'UTF-8'); // Sanitize input.
                         $data = $myworkService->getWorkByStudent($student);
 
@@ -96,15 +102,14 @@
                             "data" => $data,
                             "message" => "Student's my work data filtered by {$student}"
                         ]);
-                        break;
+                    } else {
+                        $data = $myworkService->getWorkByAuthor($currentUser);
+                        echo json_encode([
+                            "success" => true,
+                            "data" => $data,
+                            "message" => "Your own MyWork data ({$currentUser})"
+                        ]);
                     }
-                     // (Requirement: if the author parameter is empty, return the full dataset.)
-                    $data = $myworkService->getAllWork();
-                    echo json_encode([
-                        "success" => true,
-                        "data"    => $data,
-                        "message" => "All MyWork data returned (no filter applied)"
-                    ]);
                 break;
 
                 case "courses":
@@ -191,7 +196,7 @@
                         break;
                     }
 
-                    // 3. MyWorkService update using DB(MyWorkProvider)
+                    // 3. DB update
                     $updatedWork = $myworkService->updateGrade($courseId, $grade);
 
                     // 4. results
