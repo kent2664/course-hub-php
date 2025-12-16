@@ -11,7 +11,7 @@
     require __DIR__ . '/../src/validation.php';
     require __DIR__ . '/../src/Common/Response.php';
     require __DIR__ . '/../src/Service/Functions.php';
-    require __DIR__ . '/../src/Service/webconfig.php';
+    require __DIR__ . '/../src/webconfig.php';
     require __DIR__ . '/../src/Provider/dataAuthProvider.php';
     
     use App\Auth\InMemoryAuthProvider;
@@ -81,20 +81,25 @@ try {
                 case "courses":
                     //implement the feature that takes course info with $courseService
                     //echo "called ";
-                    echo json_encode($courseService->getCourseList());
+                    print_r($courseService->getCourseList());
+                    Response::json($courseService->getCourseList(), 200, "Course list fetched successfully.");
                 break;
                 case "searchcourse":
                     //login check needed
                     $authService->status();//check login status
+
+                    checkKeys("target", "searchtxt");
                     //implement the feature that takes course info with $courseService
-                    if(isset($_REQUEST["target"]) || isset($_REQUEST["searchtxt"])){
-                        //sanitize input
-                        $target = input_sanitizer($_REQUEST["target"], 'text');
-                        $searchtxt = input_sanitizer($_REQUEST["searchtxt"], 'text');
-                        print_r($courseService->searchCourseList($target, $searchtxt));
-                    } else {
-                        echo "Invalid search request.";
-                    }
+  
+                    //sanitize input
+                    $target = $_REQUEST["target"];;
+                    $searchtxt = $_REQUEST["searchtxt"];
+                    Response::json($courseService->searchCourseList($target, $searchtxt), 200, "Search results for '$searchtxt' in '$target'.");
+                break;
+                default: {
+                    Response::json([], 404, "Endpoint not found.");
+
+                } 
             }
             break;
         case "POST":
@@ -110,6 +115,45 @@ try {
                     $password = $_REQUEST["password"];
                     $authProvider->login($email,$password);
                     break;
+                case "insertcourse":
+                    //login check needed
+                    $authService->status();//check login status
+                    //sanitize input
+                    checkKeys("id", "author", "title", "category", "rating", "hours", "level", "image");
+                    $courseData = new Course(
+                            $_REQUEST["id"],
+                            $_REQUEST["author"],
+                            $_REQUEST["title"],
+                            $_REQUEST["category"],
+                            $_REQUEST["rating"],
+                            $_REQUEST["hours"],
+                            $_REQUEST["level"],
+                            $_REQUEST["image"]
+                        );
+                    Response::json($courseService->insertCourse($courseData), 200, "Course inserted successfully.");
+                break;
+                case "updatecourse":
+                    $authService->status();//check login status
+                    //sanitize input
+                    checkKeys("id", "author", "title", "category", "rating", "hours", "level", "image");
+
+                    $courseData = new Course(
+                            $_REQUEST["id"],
+                            $_REQUEST["author"] == "" ? NULL: $_REQUEST["author"],
+                            $_REQUEST["title"] == "" ? NULL: $_REQUEST["title"],
+                            $_REQUEST["category"]== "" ? NULL: $_REQUEST["category"],
+                            $_REQUEST["rating"]== "" ? NULL: $_REQUEST["rating"],
+                            $_REQUEST["hours"]== "" ? NULL: $_REQUEST["hours"],
+                            $_REQUEST["level"]== "" ? NULL: $_REQUEST["level"],
+                            $_REQUEST["image"]== "" ? NULL: $_REQUEST["image"]
+                        );
+                    Response::json($courseService->updateCourse($courseData), 200, "Course updated successfully.");
+                break;
+                case "deletecourse":
+                    $authService->status();//check login status
+                    checkKeys("id");
+                    Response::json($courseService->deleteCourse($_REQUEST["id"]), 200, "Course deleted successfully.");
+                break;
             }
             break;
 

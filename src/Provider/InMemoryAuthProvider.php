@@ -40,7 +40,7 @@
             return $this->currentUser !== null;
         }
 
-        public function getCurrentUser(): ?array{
+        public function getCurrentUser(int $userId): ?array{
             return $this->currentUser;
         }
     }

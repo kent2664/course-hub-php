@@ -8,7 +8,7 @@
 
         public function isAuthenticated(): bool;
 
-        public function getCurrentUser(): ?array;
+        public function getCurrentUser(int $userId): ?array;
     }
 
 
