@@ -1,16 +1,24 @@
 <?php
+    require __DIR__.'/../src/Interface/AuthProviderInterface.php';
+    require __DIR__.'/../src/Interface/CourseProviderInterface.php';
+    require __DIR__.'/../src/Provider/InMemoryAuthProvider.php';
+    require __DIR__.'/../src/Provider/InMemoryCourseProvider.php';
+    require __DIR__.'/../src/Provider/dataCourseProvider.php';
+    require __DIR__.'/../src/Service/AuthService.php';
+    require __DIR__.'/../src/Service/CourseService.php';
+    require __DIR__.'/../src/Model/Course.php';
+
+    use App\Auth\InMemoryAuthProvider;
+    //use App\Course\InMemoryCourseProvider;
+    use App\Course\dataCourseProvider;
+    use App\Services\AuthService;
+    use App\Services\CourseService;
+    use App\Model\Course;
 
 use App\Providers\DataAuthProvider;
 session_start();
 
-require __DIR__ . '/../src/Interface/AuthProviderInterface.php';
-require __DIR__ . '/../src/Interface/CourseProviderInterface.php';
-require __DIR__ . '/../src/Provider/InMemoryAuthProvider.php';
-require __DIR__ . '/../src/Provider/InMemoryCourseProvider.php';
-require __DIR__ . '/../src/Service/AuthService.php';
-require __DIR__ . '/../src/Service/CourseService.php';
 require __DIR__ . '/../src/Service/AuditService.php';
-require __DIR__ . '/../src/Model/Course.php';
 require __DIR__ . '/../src/validation.php';
 require __DIR__ . '/../src/Common/Response.php';
 require __DIR__ . '/../src/Service/Functions.php';
@@ -22,6 +30,9 @@ use App\Services\AuthService;
 use App\Services\CourseService;
 use App\Services\AuditService;
 use Src\Common\Response;
+    //define course service with provider
+    $courseProvider = new dataCourseProvider();
+    $courseService = new CourseService($courseProvider); //connecting the implementor class which implements the interface to the class which consumes the interface.
 
 $authProvider = new DataAuthProvider();
 // $authProvider = new InMemoryAuthProvider();
@@ -74,13 +85,13 @@ try {
                 case "courses":
                     //implement the feature that takes course info with $courseService
                     //echo "called ";
-                    print_r($courseService->getCourseList());
-                    break;
+                    echo json_encode($courseService->getCourseList());
+                break;
                 case "searchcourse":
                     //login check needed
                     $authService->status();//check login status
                     //implement the feature that takes course info with $courseService
-                    if (isset($_REQUEST["target"]) && isset($_REQUEST["searchtxt"])) {
+                    if(isset($_REQUEST["target"]) || isset($_REQUEST["searchtxt"])){
                         //sanitize input
                         $target = input_sanitizer($_REQUEST["target"], 'text');
                         $searchtxt = input_sanitizer($_REQUEST["searchtxt"], 'text');
