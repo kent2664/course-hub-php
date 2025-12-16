@@ -1,30 +1,33 @@
-<?php 
+<?php
 
-  namespace App\Services;
-  use App\Interface\AuthProviderInterface;
-  class AuthService{
+namespace App\Services;
+use App\Interface\AuthProviderInterface;
+class AuthService
+{
     private AuthProviderInterface $provider;
-    function __construct(AuthProviderInterface $provider){
+    function __construct(AuthProviderInterface $provider)
+    {
         $this->provider = $provider;
     }
-    function attemptLogin(string $username, string $password): string{
-        if($this->provider->login($username,$password)){
-            return "Login successful. Welcome, {$username}.";
+    function attemptLogin(string $email, string $password): string
+    {
+        if ($this->provider->login($email, $password)) {
+            return "Login successful. Welcome, {$email}.";
         }
         return "Login failed. Invalid credentials.";
 
     }
-    function status(): string{
-        if($this->provider->isAuthenticated()){
+    function status()
+    {
+        if ($this->provider->isAuthenticated()) {
             $user = $this->provider->getCurrentUser();
-            return "User '{$user}' is authenticated.";
+            return $user;
         }
 
         return "No user is currently authenticated.";
     }
-    
-  }
+
+}
 
 
 ?>
-

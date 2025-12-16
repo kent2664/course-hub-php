@@ -4,19 +4,30 @@
     use App\Interface\AuthProviderInterface;
 
     class InMemoryAuthProvider implements AuthProviderInterface{
+        // Array for initial users
         private array $users = [
-            'alice' => 'password123',
-            'bob'   => 'secret',
+            ['email' => 'matheus@gmail.com','password'=> 'matheus123', 'role'=>'student'],
+            ['email' => 'kenta@gmail.com','password'=> 'kenta123', 'role'=>'admin'],
+            ['email' => 'tiana@gmail.com','password'=> 'tiana123', 'role'=>'teacher']
         ];
 
-        private ?string $currentUser = null; //"?" means either the value should be a string or null
+        private ?array $currentUser = null; //"?" means either the value should be a string or null
 
-        public function login(string $username, string $password): bool
+        public function login(string $email, string $password): bool
         {
-            if(isset($this->users[$username]) && $this->users[$username] === $password){
-                $this->currentUser = $username;
-                return true;
+            // Looping through users array and support both plain and hashed passwords
+            foreach ($this->users as $user) {
+                if (!isset($user["email"]) || $user['email'] != $email) continue;
+
+                $stored = $user['password'];
+
+                if (password_verify($password, $stored)) {
+                    $this->currentUser = $user;
+                    return true;
+                }
             }
+
+            // If no match, return false
             return false;
         }
 
@@ -29,7 +40,7 @@
             return $this->currentUser !== null;
         }
 
-        public function getCurrentUser(): ?string{
+        public function getCurrentUser(): ?array{
             return $this->currentUser;
         }
     }

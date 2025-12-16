@@ -1,4 +1,4 @@
-<?php 
+<?php
     require __DIR__.'/../src/Interface/AuthProviderInterface.php';
     require __DIR__.'/../src/Interface/CourseProviderInterface.php';
     require __DIR__.'/../src/Provider/InMemoryAuthProvider.php';
@@ -15,32 +15,73 @@
     use App\Services\CourseService;
     use App\Model\Course;
 
-    $authProvider = new InMemoryAuthProvider();
-    $authService = new AuthService($authProvider); //connecting the implementor class which implements the interface to the class which consumes the interface.
+use App\Providers\DataAuthProvider;
+session_start();
 
+require __DIR__ . '/../src/Service/AuditService.php';
+require __DIR__ . '/../src/validation.php';
+require __DIR__ . '/../src/Common/Response.php';
+require __DIR__ . '/../src/Service/Functions.php';
+require __DIR__ . '/../src/Service/webconfig.php';
+require __DIR__ . '/../src/Provider/dataAuthProvider.php';
+use App\Auth\InMemoryAuthProvider;
+use App\Course\InMemoryCourseProvider;
+use App\Services\AuthService;
+use App\Services\CourseService;
+use App\Services\AuditService;
+use Src\Common\Response;
     //define course service with provider
     $courseProvider = new dataCourseProvider();
     $courseService = new CourseService($courseProvider); //connecting the implementor class which implements the interface to the class which consumes the interface.
 
+$authProvider = new DataAuthProvider();
+// $authProvider = new InMemoryAuthProvider();
+$authService = new AuthService($authProvider); //connecting the implementor class which implements the interface to the class which consumes the interface.
 
-    // sample codes
-    // echo $authService->status() . "</br>";
+//define course service with provider
+$courseProvider = new InMemoryCourseProvider();
+$courseService = new CourseService($courseProvider); //connecting the implementor class which implements the interface to the class which consumes the interface.
+$auditService = new AuditService();
 
-    // echo $authService->attemptLogin('alice',"password123");
-    // echo $authService->status()."</br>";
+// sample codes
+// echo $authService->status() . "</br>";
 
-    // $provider->logout();
-    // echo $authService->status(). "</br>";
-        switch($_SERVER["REQUEST_METHOD"]){
+// echo $authService->attemptLogin('alice',"password123");
+// echo $authService->status()."</br>";
+
+// $provider->logout();
+// echo $authService->status(). "</br>";
+try {
+    $errFlag = false;
+    switch ($_SERVER["REQUEST_METHOD"]) {
         case "GET":
             //check the APi is booklist
-            switch(basename($_SERVER["PATH_INFO"])){
+            switch (basename($_SERVER["PATH_INFO"])) {
                 case "logout":
-                    //implement logout feature with $authService
-                break;
+                    if (isset($_SESSION["username"])) {
+                        $auditService->logLogout($_SESSION["username"]);
+                        session_unset();
+                        session_destroy();
+                        echo "Logged out successfully!";
+                    } else {
+                        throw new Exception("Logout error", 400);
+                    }
+                    break;
+                case "auth/me":
+                    // Return current authenticated user info from session
+                    if (isset($_SESSION["authenticated"]) && $_SESSION["authenticated"] === true && isset($_SESSION["email"])) {
+                        $user = [
+                            'email' => $_SESSION["email"],
+                            'authenticated' => true
+                        ];
+                        Response::json($user, 200, ($_SESSION["email"] . " is logged in."));
+                    } else {
+                        Response::json([], 401, "No user logged in.");
+                    }
+                    break;
                 case "mywork":
                     //implement the feature that takes achievement info with $myworkService
-                break;
+                    break;
                 case "courses":
                     //implement the feature that takes course info with $courseService
                     //echo "called ";
@@ -48,87 +89,38 @@
                 break;
                 case "searchcourse":
                     //login check needed
-                     $authService->status();//check login status
+                    $authService->status();//check login status
                     //implement the feature that takes course info with $courseService
                     if(isset($_REQUEST["target"]) || isset($_REQUEST["searchtxt"])){
                         //sanitize input
-                        $target = htmlspecialchars($_REQUEST["target"], ENT_QUOTES, 'UTF-8');
-                        $searchtxt = htmlspecialchars($_REQUEST["searchtxt"], ENT_QUOTES, 'UTF-8');
-                        print_r($courseService->searchCourseList($target,$searchtxt));
-                    }else{
+                        $target = input_sanitizer($_REQUEST["target"], 'text');
+                        $searchtxt = input_sanitizer($_REQUEST["searchtxt"], 'text');
+                        print_r($courseService->searchCourseList($target, $searchtxt));
+                    } else {
                         echo "Invalid search request.";
                     }
             }
             break;
         case "POST":
             // when the form submit, this case will be executed.
-            switch(basename($_SERVER["PATH_INFO"])){
+            switch (basename($_SERVER["PATH_INFO"])) {
+                case "register":
+                    checkKeys("email", "password", "role");
+                    registerUser($_REQUEST["email"], $_REQUEST["password"], $_REQUEST["role"]);
+                    break;
                 case "login":
-                    if(isset($_REQUEST["username"]) || isset($_REQUEST["password"])){
-                        //sanitize input
-                        $username = htmlspecialchars($_REQUEST["username"], ENT_QUOTES, 'UTF-8');
-                        $password = htmlspecialchars($_REQUEST["password"], ENT_QUOTES, 'UTF-8');
-                        echo $authService->attemptLogin($username,$password);
-                    }else{
-                        echo "Invalid login request.";
-                    }
-                break;
-                case "insertcourse":
-                    //login check needed
-                    $authService->status();//check login status
-                    if(isset($_REQUEST["id"]) || isset($_REQUEST["author"]) || isset($_REQUEST["title"]) || isset($_REQUEST["category"]) || isset($_REQUEST["rating"]) || isset($_REQUEST["hours"]) || isset($_REQUEST["level"]) || isset($_REQUEST["image"]) ){
-                        //sanitize input
-                        $target = htmlspecialchars($_REQUEST["id"], ENT_QUOTES, 'UTF-8');
-                        $searchtxt = htmlspecialchars($_REQUEST["author"], ENT_QUOTES, 'UTF-8');
-
-                        $courseData = new Course(
-                            $_REQUEST["id"],
-                            $_REQUEST["author"],
-                            $_REQUEST["title"],
-                            $_REQUEST["category"],
-                            $_REQUEST["rating"],
-                            $_REQUEST["hours"],
-                            $_REQUEST["level"],
-                            $_REQUEST["image"]
-                        );
-                        echo $courseService->insertCourse($courseData)." records inserted.";
-                    }else{
-                        echo "Invalid search request.";
-                    }
-                break;
-                case "updatecourse":
-                    $authService->status();//check login status
-                    if(isset($_REQUEST["id"]) || isset($_REQUEST["author"]) || isset($_REQUEST["title"]) || isset($_REQUEST["category"]) || isset($_REQUEST["rating"]) || isset($_REQUEST["hours"]) || isset($_REQUEST["level"]) || isset($_REQUEST["image"]) ){
-                        //sanitize input
-
-                        $courseData = new Course(
-                            $_REQUEST["id"],
-                            $_REQUEST["author"] == "" ? NULL: $_REQUEST["author"],
-                            $_REQUEST["title"] == "" ? NULL: $_REQUEST["title"],
-                            $_REQUEST["category"]== "" ? NULL: $_REQUEST["category"],
-                            $_REQUEST["rating"]== "" ? NULL: $_REQUEST["rating"],
-                            $_REQUEST["hours"]== "" ? NULL: $_REQUEST["hours"],
-                            $_REQUEST["level"]== "" ? NULL: $_REQUEST["level"],
-                            $_REQUEST["image"]== "" ? NULL: $_REQUEST["image"]
-                        );
-                        echo $courseService->updateCourse($courseData)." records updated.";
-                    }else{
-                        echo "Invalid update request.";
-                    }
-                break;
-                case "deletecourse":
-                    $authService->status();//check login status
-                    if(isset($_REQUEST["id"]) ){
-                        //sanitize input
-                        $target = htmlspecialchars($_REQUEST["id"], ENT_QUOTES, 'UTF-8');
-                        echo $courseService->deleteCourse($target)." records deleted.";
-                    }else{
-                        echo "Invalid delete request.";
-                    }
-                break;
+                    checkKeys("email", "password");
+                    $email = $_REQUEST["email"];
+                    $password = $_REQUEST["password"];
+                    $authProvider->login($email,$password);
+                    break;
             }
             break;
 
     }
+} catch (Exception $err) {
+    http_response_code($err->getCode());
+    echo "Error: " . $err->getMessage();
+}
 
 ?>
