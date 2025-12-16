@@ -4,6 +4,7 @@
     use App\Interface\AuthProviderInterface;
 
     class InMemoryAuthProvider implements AuthProviderInterface{
+        // Array for initial users
         private array $users = [
             ['email' => 'matheus@gmail.com','password'=> 'matheus123', 'role'=>'student'],
             ['email' => 'kenta@gmail.com','password'=> 'kenta123', 'role'=>'admin'],

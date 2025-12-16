@@ -1,4 +1,6 @@
 <?php
+
+use App\Providers\DataAuthProvider;
 session_start();
 
 require __DIR__ . '/../src/Interface/AuthProviderInterface.php';
@@ -13,13 +15,16 @@ require __DIR__ . '/../src/validation.php';
 require __DIR__ . '/../src/Common/Response.php';
 require __DIR__ . '/../src/Service/Functions.php';
 require __DIR__ . '/../src/Service/webconfig.php';
+require __DIR__ . '/../src/Provider/dataAuthProvider.php';
 use App\Auth\InMemoryAuthProvider;
 use App\Course\InMemoryCourseProvider;
 use App\Services\AuthService;
 use App\Services\CourseService;
 use App\Services\AuditService;
+use Src\Common\Response;
 
-$authProvider = new InMemoryAuthProvider();
+$authProvider = new DataAuthProvider();
+// $authProvider = new InMemoryAuthProvider();
 $authService = new AuthService($authProvider); //connecting the implementor class which implements the interface to the class which consumes the interface.
 
 //define course service with provider
@@ -44,10 +49,23 @@ try {
                 case "logout":
                     if (isset($_SESSION["username"])) {
                         $auditService->logLogout($_SESSION["username"]);
+                        session_unset();
                         session_destroy();
                         echo "Logged out successfully!";
                     } else {
                         throw new Exception("Logout error", 400);
+                    }
+                    break;
+                case "auth/me":
+                    // Return current authenticated user info from session
+                    if (isset($_SESSION["authenticated"]) && $_SESSION["authenticated"] === true && isset($_SESSION["email"])) {
+                        $user = [
+                            'email' => $_SESSION["email"],
+                            'authenticated' => true
+                        ];
+                        Response::json($user, 200, ($_SESSION["email"] . " is logged in."));
+                    } else {
+                        Response::json([], 401, "No user logged in.");
                     }
                     break;
                 case "mywork":
@@ -81,70 +99,17 @@ try {
                     break;
                 case "login":
                     checkKeys("email", "password");
-                    // Implement login feature with $authService
-                    if (isset($_POST["email"]) && isset($_POST["password"])) {
-                        // Sanitized data received using input_sanitizer function
-                        $email = input_sanitizer($_POST["email"], 'email');
-                        $passwordRaw = input_sanitizer($_POST["password"], 'pass');
-
-                        $db = new mysqli(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
-                        if ($db->connect_error) {
-                            throw new Exception("Connection issue.", 500);
-                        }
-
-                        $loadUser = $db->prepare("SELECT * FROM user_tb WHERE email=?");
-                        $loadUser->bind_param("s", $email);
-                        $loadUser->execute();
-                        $userData = $loadUser->get_result();
-
-                        if ($userData->num_rows === 0) {
-                            // user not found
-                            $ip = $_SERVER['REMOTE_ADDR'] ?? 'UNKNOWN';
-                            $auditService->logLogin($email, false, $ip);
-                            throw new Exception("Invalid credentials", 401);
-                        }
-
-                        $userInfo = $userData->fetch_assoc();
-                        $loadUser->close();
-                        $db->close();
-
-                        // support different column names for password hashes
-                        if (isset($userInfo['passWord'])) $hash = $userInfo['passWord'];
-                        else {
-                            $ip = $_SERVER['REMOTE_ADDR'] ?? 'UNKNOWN';
-                            $auditService->logLogin($email, false, $ip);
-                            throw new Exception("Invalid credentials.", 500);
-                        }
-
-                        if (!password_verify($passwordRaw, $hash)) {
-                            $ip = $_SERVER['REMOTE_ADDR'] ?? 'UNKNOWN';
-                            $auditService->logLogin($email, false, $ip);
-                            throw new Exception("Username or Password invalid", 401);
-                        }
-
-                        // successful login
-                        $_SESSION["email"] = $email;
-                        $_SESSION["authenticated"] = true;
-                        $ip = $_SERVER['REMOTE_ADDR'] ?? 'UNKNOWN';
-                        $auditService->logLogin($email, true, $ip);
-                        require __DIR__ . '/../src/Common/Response.php';
-                        
-                        
-                        Src\Common\Response::json(['sid' => session_id()], 200, 'Login successful');
-                    } else {
-                        throw new Exception("Invalid login request.", 400);
-                    }
+                    $email = $_REQUEST["email"];
+                    $password = $_REQUEST["password"];
+                    $authProvider->login($email,$password);
                     break;
-                    case "auth/me":
-                    
-                        break;
             }
             break;
 
     }
 } catch (Exception $err) {
     http_response_code($err->getCode());
-    // echo "Error: ".$err->getMessage();
+    echo "Error: " . $err->getMessage();
 }
 
 ?>
