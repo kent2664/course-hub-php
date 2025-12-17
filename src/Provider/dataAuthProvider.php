@@ -15,7 +15,40 @@ class DataAuthProvider implements AuthProviderInterface
         $this->auditService = new AuditService();
     }
 
-    public function login(string $email, string $password): bool
+    public function registerUser($email, $password, $role, $deleteFlag = 0): void
+    {
+        try {
+            $errFlag = false;
+            $db = new \mysqli(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
+            if ($db->connect_error) {
+                throw new \Exception("DB error: " . $db->connect_error, 500);
+            }
+            $insertPrep = $db->prepare("INSERT INTO `users` (passWord,email,role,deleteFlag) VALUES (?,?,?,?)");
+            $selectPrep = $db->prepare("SELECT userId FROM `users` WHERE email=?");
+            $selectPrep->bind_param("s", $email);
+            $password = password_hash($password, PASSWORD_BCRYPT, ['cost' => 10]);
+            $insertPrep->bind_param("sssi", $password, $email, $role, $deleteFlag);
+            $selectPrep->execute();
+            $result = $selectPrep->get_result();
+            if ($result->num_rows > 0)
+                $errFlag = true;
+            else {
+                if (!$insertPrep->execute())
+                    $errFlag = true;
+            }
+            $db->close();
+            if (!$errFlag)
+                Response::json([], 200, "Record Added");
+            else {
+                throw new \Exception("Record insertion failed.", 400);
+            }
+        } catch (\Exception $err) {
+            Response::json([], $err->getCode(), $err->getMessage());
+        }
+
+    }
+
+    public function login(string $email, string $password): ?bool
     {
         $db = new \mysqli(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
         if ($db->connect_error) {
@@ -30,52 +63,174 @@ class DataAuthProvider implements AuthProviderInterface
         if ($userData->num_rows === 0) {
             // User not found
             $ip = $_SERVER['REMOTE_ADDR'] ?? 'UNKNOWN';
-            $this->auditService->logLogin($email, false, $ip);
+            $this->auditService->logLogin($email, false, $ip, null);
             Response::json([], 400, "Failed login attempt");
         }
 
         $userInfo = $userData->fetch_assoc();
         $loadUser->close();
+        $userId = $userInfo["userId"];
 
         if (!isset($userInfo['passWord'])) {
             $db->close();
             $ip = $_SERVER['REMOTE_ADDR'] ?? 'UNKNOWN';
-            $this->auditService->logLogin($email, false, $ip);
+            $this->auditService->logLogin($email, false, $ip, $userId);
             Response::json([], 400, "Failed login attempt");
         }
 
+        // Get the hashed and salted password from db
         $hash = $userInfo['passWord'];
-        $db->close();
 
         if (!password_verify($password, $hash)) {
             $ip = $_SERVER['REMOTE_ADDR'] ?? 'UNKNOWN';
-            $this->auditService->logLogin($email, false, $ip);
+            $this->auditService->logLogin($email, false, $ip, $userId);
             Response::json([], 400, "Failed login attempt");
         }
 
         // Successful login
-        $_SESSION["email"] = $email;
-        $_SESSION["authenticated"] = true;
+        $userid = (int) $userInfo["userId"];
+        $token = generate_token();
+        store_access_token($db, $userid, $token);
+        $db->close();
         $ip = $_SERVER['REMOTE_ADDR'] ?? 'UNKNOWN';
-        $this->auditService->logLogin($email, true, $ip);
-        Response::json([], 200, 'Login successful');
+        $this->auditService->logLogin($email, true, $ip,$userId);
+        json_response(json_writer([
+            'access_token' => $token,
+            'token_type' => 'Bearer',
+            'expires_in' => ACCESS_TOKEN_TTL_SECONDS
+        ]));
     }
 
     public function logout(): void
     {
-        if (isset($_SESSION["email"])) {
-            $this->auditService->logLogout($_SESSION["email"]);
-            session_unset();
-            session_destroy();
-            Response::json([], 200, "Logout succesfull");
+        // Expect a Bearer token for logout; revoke it in the api_token table
+        $token = get_bearer_token();
+        if ($token === null) {
+            Response::json([], 401, "Missing Bearer Token");
+        }
+
+        $db = new \mysqli(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
+        if ($db->connect_error) {
+            Response::json([], 500, "DB connection error");
+        }
+
+        // Find user id for this token (even if expired/revoked status will be handled separately)
+        $hash = hash('sha256', $token);
+        $selectPrep = $db->prepare("SELECT userId FROM api_token WHERE token_hash=?");
+        $selectPrep->bind_param("s", $hash);
+        $selectPrep->execute();
+        $result = $selectPrep->get_result();
+        $row = $result->fetch_assoc();
+        if (!$row) {
+            $db->close();
+            Response::json([], 401, "Invalid token");
+        }
+        $userId = (int)$row['userId'];
+
+        // Get user email for audit logging
+        $selUser = $db->prepare("SELECT email FROM users WHERE userId=?");
+        $selUser->bind_param("i", $userId);
+        $selUser->execute();
+        $userRes = $selUser->get_result();
+        $userRow = $userRes->fetch_assoc();
+        $email = $userRow['email'] ?? '';
+
+        // Revoke the token (set revoked_at = NOW())
+        revoke_access_token($db, $token);
+
+        $ip = $_SERVER['REMOTE_ADDR'] ?? "UNKNOWN";
+        $this->auditService->logLogout($email, $ip, $userId);
+        $db->close();
+
+        Response::json([], 200, "Logout succesfull");
+    }
+
+    public function isAuthenticated(): ?bool
+    {
+        $db = new \mysqli(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
+        if ($db->connect_error) {
+            throw new Exception(json_writer(['error' => "Connection issue."]), 500);
+        }
+        $userid = require_auth($db);
+        if ($userid == null) {
+            echo "null";
+        }
+        json_response(json_writer([
+            'user_id' => $userid,
+            'message' => 'Authenticated'
+        ]));
+    }
+
+    public function isAdmin(): bool
+    {
+        $db = new \mysqli(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
+        if ($db->connect_error) {
+            throw new Exception(json_writer(['error' => "Connection issue."]), 500);
+        }
+        $userid = require_auth($db);
+        $selectPrep = $db->prepare("SELECT role FROM users WHERE userId=?");
+        $selectPrep->bind_param("i", $userid);
+        $selectPrep->execute();
+        $userInfo = $selectPrep->get_result();
+        $userData = $userInfo->fetch_assoc();
+        if ($userData["role"] == "admin") {
+            return true;
         } else {
-            Response::json([], 400, "Logout attempt failed");
+            return false;
         }
     }
 
-    public function isAuthenticated(): bool
+    public function isStaff(): bool
     {
-        return false;
+        $db = new \mysqli(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
+        if ($db->connect_error) {
+            throw new Exception(json_writer(['error' => "Connection issue."]), 500);
+        }
+        $userid = require_auth($db);
+        $selectPrep = $db->prepare("SELECT role FROM users WHERE userId=?");
+        $selectPrep->bind_param("i", $userid);
+        $selectPrep->execute();
+        $userInfo = $selectPrep->get_result();
+        $userData = $userInfo->fetch_assoc();
+        if ($userData["role"] == "admin" || $userData["role"] == "teacher") {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public function isTeacher(): bool
+    {
+        $db = new \mysqli(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
+        if ($db->connect_error) {
+            throw new Exception(json_writer(['error' => "Connection issue."]), 500);
+        }
+        $userid = require_auth($db);
+        $selectPrep = $db->prepare("SELECT role FROM users WHERE userId=?");
+        $selectPrep->bind_param("i", $userid);
+        $selectPrep->execute();
+        $userInfo = $selectPrep->get_result();
+        $userData = $userInfo->fetch_assoc();
+        if ($userData["role"] == "teacher") {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public function getRole(): ?string
+    {
+        $db = new \mysqli(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
+        if ($db->connect_error) {
+            throw new Exception(json_writer(['error' => "Connection issue."]), 500);
+        }
+        $userid = require_auth($db);
+        $selectPrep = $db->prepare("SELECT role FROM users WHERE userId=?");
+        $selectPrep->bind_param("i", $userid);
+        $selectPrep->execute();
+        $userInfo = $selectPrep->get_result();
+        $userData = $userInfo->fetch_assoc();
+        return $userData["role"];
     }
 
     public function getCurrentUser(int $userId): ?array

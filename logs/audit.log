@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 [2025-12-10 22:09:45] | IP: ::1 | USERNAME: tian | STATUS: FAILED
 [2025-12-10 22:09:49] | IP: ::1 | USERNAME: tiana | STATUS: SUCCESS
 [2025-12-13 22:30:32] | IP: ::1 | USERNAME: tiana@mail.com | STATUS: FAILED
@@ -13,3 +14,8 @@
 [2025-12-16 04:42:27] | IP: ::1 | EMAIL: matheus@gmail.com | STATUS: FAILED
 [2025-12-16 04:42:35] | IP: ::1 | EMAIL: matheuvewobus@gmail.com | STATUS: FAILED
 [2025-12-16 20:15:29] | IP: ::1 | EMAIL: kenta@gmail.com | STATUS: SUCCESS
+=======
+[2025-12-16 20:46:46] | IP: ::1 | EMAIL: kenta@gmail.com | ACTION: LOGIN ATTEMPT | STATUS: SUCCESS | USER ID: 19[2025-12-17 12:40:52] | IP: ::1 | EMAIL: kenta@gmail.com | ACTION: LOGIN ATTEMPT | STATUS: SUCCESS | USER ID: 19
+[2025-12-17 20:47:15] | IP: ::1 | EMAIL: kenta@gmail.com | ACTION: LOGOUT | USER ID: 19
+
+>>>>>>> main

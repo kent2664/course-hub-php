@@ -11,8 +11,15 @@
     require __DIR__ . '/../src/validation.php';
     require __DIR__ . '/../src/Common/Response.php';
     require __DIR__ . '/../src/Service/Functions.php';
-    require __DIR__ . '/../src/webconfig.php';
     require __DIR__ . '/../src/Provider/dataAuthProvider.php';
+
+    require __DIR__ . '/../src/Service/webconfig.php';
+    require __DIR__ . '/../src/Service/auth_token.php';
+// require __DIR__ . '/../src/Service/helpers.php';
+
+    require __DIR__.'/../src/Interface/MyWorkProviderInterface.php'; //interface
+    require __DIR__.'/../src/Provider/DbMyWorkProvider.php'; //data processing
+    require __DIR__.'/../src/Service/MyWorkService.php';//business logic
     
     use App\Auth\InMemoryAuthProvider;
     //use App\Course\InMemoryCourseProvider;
@@ -21,32 +28,38 @@
     use App\Services\CourseService;
     use App\Model\Course;
 
-use App\Providers\DataAuthProvider;
-session_start();
+    use App\Services\AuditService;
+    use Src\Common\Response;
+    use App\Providers\DataAuthProvider;
 
+    use App\Services\MyWorkService;
+    use App\MyWork\DbMyWorkProvider;
+   session_start();
 
-use App\Course\InMemoryCourseProvider;
-use App\Services\AuditService;
-use Src\Common\Response;
 
 //define course service with provider
-$courseProvider = new dataCourseProvider();
-$courseService = new CourseService($courseProvider); //connecting the implementor class which implements the interface to the class which consumes the interface.
+// $courseProvider = new dataCourseProvider();
+// $courseService = new CourseService($courseProvider); //connecting the implementor class which implements the interface to the class which consumes the interface.
 
-$authProvider = new DataAuthProvider();
-// $authProvider = new InMemoryAuthProvider();
-$authService = new AuthService($authProvider); //connecting the implementor class which implements the interface to the class which consumes the interface.
+    $authProvider = new DataAuthProvider();
+    $authService = new AuthService($authProvider); //connecting the implementor class which implements the interface to the class which consumes the interface.
 
-$auditService = new AuditService();
+//define course service with provider
+// $courseProvider = new InMemoryCourseProvider();
+// $courseService = new CourseService($courseProvider); //connecting the implementor class which implements the interface to the class which consumes the interface.
+    // error_reporting(E_ALL);
+    // ini_set("display_errors", 1);
+   
+    //define course service with provider
+    $myworkProvider = new DbMyWorkProvider($pdo);
+    $myworkService = new MyWorkService($myworkProvider, $authService);
+    $courseProvider = new dataCourseProvider();
+    // $courseProvider = new InMemoryCourseProvider();
+    $courseService = new CourseService($courseProvider); //connecting the implementor class which implements the interface to the class which consumes the interface.
 
-// sample codes
-// echo $authService->status() . "</br>";
+    // $authProvider = new InMemoryAuthProvider();
 
-// echo $authService->attemptLogin('alice',"password123");
-// echo $authService->status()."</br>";
 
-// $provider->logout();
-// echo $authService->status(). "</br>";
 try {
     $errFlag = false;
     switch ($_SERVER["REQUEST_METHOD"]) {
@@ -54,29 +67,40 @@ try {
             //check the APi is booklist
             switch (basename($_SERVER["PATH_INFO"])) {
                 case "logout":
-                    if (isset($_SESSION["username"])) {
-                        $auditService->logLogout($_SESSION["username"]);
-                        session_unset();
-                        session_destroy();
-                        echo "Logged out successfully!";
-                    } else {
-                        throw new Exception("Logout error", 400);
-                    }
-                    break;
-                case "auth/me":
-                    // Return current authenticated user info from session
-                    if (isset($_SESSION["authenticated"]) && $_SESSION["authenticated"] === true && isset($_SESSION["email"])) {
-                        $user = [
-                            'email' => $_SESSION["email"],
-                            'authenticated' => true
-                        ];
-                        Response::json($user, 200, ($_SESSION["email"] . " is logged in."));
-                    } else {
-                        Response::json([], 401, "No user logged in.");
-                    }
-                    break;
+                // Use provider logout which will revoke the bearer token
+                  $authProvider->logout();    
+                break;
+
                 case "mywork":
-                    //implement the feature that takes achievement info with $myworkService
+
+                    // 2. query (JSON)
+                    header('Content-Type: application/json');
+                    $currentUser = $_SESSION["email"] ?? 'unknown';
+
+                    checkKeys("author");
+                    if(isset($_GET["author"])){
+                         // 2-1 Filter by Author: Handles requests like /mywork?author=Alice
+                        $author = htmlspecialchars($_GET["author"], ENT_QUOTES, 'UTF-8'); // Sanitize input to prevent XSS/injection attacks.
+                        $data = $myworkService->getWorkByAuthor($author); 
+                        Response::json($data, 200,"Success to course serching.");
+                        echo json_encode([
+                            "success" => true,
+                            "data" => $data,
+                            "message" => "My work data filtered by {$author}"
+                        ]);                    
+                    } else {
+                        $data = $myworkService->getAllWork();
+                        echo json_encode([
+                            "success" => true,
+                            "data" => $data,
+                            "message" => "Your own MyWork data ({$currentUser})"
+                        ]);
+                    }
+                break;
+
+                    break;
+                case "authme":
+                    $authProvider->isAuthenticated();
                     break;
                 case "courses":
                     //implement the feature that takes course info with $courseService
@@ -105,14 +129,67 @@ try {
             // when the form submit, this case will be executed.
             switch (basename($_SERVER["PATH_INFO"])) {
                 case "register":
+                    if(!isset($_REQUEST["role"])){
+                        $_REQUEST["role"] = "student";
+                    } 
+                    if($_REQUEST["role"]=="teacher"||$_REQUEST["role"]=="admin"){
+                        if(!$authProvider->isAdmin()){
+                            Response::json([],400,"Not authorized");
+                        }
+                    }
+                    // Check and sanitize keys
                     checkKeys("email", "password", "role");
-                    registerUser($_REQUEST["email"], $_REQUEST["password"], $_REQUEST["role"]);
+                    // Call the registerUser function
+                    $authProvider->registerUser($_REQUEST["email"], $_REQUEST["password"], $_REQUEST["role"]);
                     break;
                 case "login":
+                    // Check and sanitize the keys
                     checkKeys("email", "password");
+                    // Define variables
                     $email = $_REQUEST["email"];
                     $password = $_REQUEST["password"];
-                    $authProvider->login($email,$password);
+                    // Call the function
+                    $authProvider->login($email, $password);
+                    break;
+
+                case "mywork-grading":
+                    checkKeys("courseId","grade");
+                    header('Content-Type: application/json');
+                    //1. Check login permissions
+                    // $statusInfo = $authService->statusDetail();
+                    // if (
+                    //     !$statusInfo['logged_in'] ||
+                    //     !in_array($statusInfo['role'], ['admin','teacher'], true)
+                    // ) {
+                    //     http_response_code(401); // fail 401[web:8]
+                    //     echo json_encode([
+                    //         "success" => false,
+                    //         "message" => "Only admin or teacher can update grades."
+                    //     ]);
+                    //     break;
+                    // }
+
+                    // 2. Filtering (courseId, grade)
+                    $courseId = isset($_POST['courseId'])
+                        ? htmlspecialchars($_POST['courseId'], ENT_QUOTES, 'UTF-8')
+                        : '';
+                    $grade    = isset($_POST['grade'])
+                        ? htmlspecialchars($_POST['grade'], ENT_QUOTES, 'UTF-8')
+                        : '';
+
+                    if ($courseId === '' || $grade === '') {
+                        echo json_encode([
+                            "success" => false,
+                            "message" => "Invalid grading request. courseId and grade are required."
+                        ]);
+                        break;
+                    }
+
+                    // 3. DB update
+                    $updatedWork = $myworkService->updateGrade($courseId, $grade);
+                    
+                    Response::json($updatedWork, 200,"Success to serching.");
+
                     break;
                 case "insertcourse":
                     //login check needed
@@ -158,8 +235,7 @@ try {
 
     }
 } catch (Exception $err) {
-    http_response_code($err->getCode());
-    echo "Error: " . $err->getMessage();
+    json_response($err->getMessage(), $err->getCode());
 }
 
 ?>

@@ -5,7 +5,7 @@
     use App\Interface\CourseProviderInterface;
     use App\Model\Course;
 
-    //require __DIR__.'/../webconfig.php';
+    require __DIR__.'/../Service/webconfig.php';
 
     class dataCourseProvider implements CourseProviderInterface{
 
