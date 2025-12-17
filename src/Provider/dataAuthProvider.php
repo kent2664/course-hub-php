@@ -152,9 +152,6 @@ class DataAuthProvider implements AuthProviderInterface
             throw new Exception(json_writer(['error' => "Connection issue."]), 500);
         }
         $userid = require_auth($db);
-        if ($userid == null) {
-            echo "null";
-        }
         json_response(json_writer([
             'user_id' => $userid,
             'message' => 'Authenticated'
