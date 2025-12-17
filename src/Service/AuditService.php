@@ -41,6 +41,15 @@ class AuditService
         file_put_contents($this->logFile, $logEntry, FILE_APPEND);
     }
 
+    // This function will log every time someone login in, into an log audit file.
+    public function outputLog(string $username, bool $success, string $message): void{
+        $timestamp = date('Y-m-d H:i:s');
+        $status = $success ? 'SUCCESS' : 'FAILED';
+        $logEntry = "[{$timestamp}] | USERNAME: {$username} | STATUS: {$status} | MESSAGE: {$message}"  . "\n";
+
+        file_put_contents($this->logFile, $logEntry, FILE_APPEND);
+    }
+
     public function getAuditLog(): string
     {
         if (file_exists($this->logFile)) {

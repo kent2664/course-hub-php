@@ -81,7 +81,6 @@ try {
                 case "courses":
                     //implement the feature that takes course info with $courseService
                     //echo "called ";
-                    print_r($courseService->getCourseList());
                     Response::json($courseService->getCourseList(), 200, "Course list fetched successfully.");
                 break;
                 case "searchcourse":

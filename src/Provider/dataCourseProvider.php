@@ -9,8 +9,11 @@
 
     class dataCourseProvider implements CourseProviderInterface{
 
+        private AuditService $auditService;
+
         private array $courses = [];
-        public function __construct(){
+        public function __construct(AuditService $auditService){
+            $this->auditService = $auditService;
         }
 
 
@@ -41,6 +44,7 @@
                 );
                 array_push($this->courses, $course);
                 }
+                
                 return $this->courses;
             }catch(\Exception $e){
                 throw new \Exception($e->getMessage(), $e->getCode());
@@ -154,9 +158,11 @@
                 if($insertCourse->affected_rows === 0)  throw new \Exception("Data insert faild.",500);
                 $insertCourse->close();
                 $db->close();
+                $this->auditService->outputLog($_SESSION["username"], true, "Successfully inserted course with ID: " . $id);
                 return true;
             }catch(\Exception $e){
-                    throw new \Exception($e->getMessage(), $e->getCode());
+                $this->auditService->outputLog($_SESSION["username"], false, "Failed to insert course with ID: " . $id);
+                throw new \Exception($e->getMessage(), $e->getCode());
             }
 
         }
@@ -199,8 +205,10 @@
                 $updateCourse->close();
                 $db->close();
 
+                $this->auditService->outputLog($_SESSION["username"], true, "Successfully updated course with ID: " . $id);
                 return $updateData;
             }catch(\Exception $e){
+                    $this->auditService->outputLog($_SESSION["username"], false, "Failed to update course with ID: " . $id);
                     throw new \Exception($e->getMessage(), $e->getCode());
             }
         }
@@ -226,8 +234,11 @@
                 $deleteCourse->close();
                 $db->close();
 
+                $this->auditService->outputLog($_SESSION["username"], true, "Successfully deleted course with ID: " . $courseId);
+
                 return $deleteData;
             }catch(\Exception $e){
+                $this->auditService->outputLog($_SESSION["username"], false, "Failed to delete course with ID: " . $courseId);
                 throw new \Exception($e->getMessage(), $e->getCode());
             }
         }

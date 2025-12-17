@@ -3,6 +3,7 @@
   namespace App\Services;
   use App\Interface\CourseProviderInterface;
   use App\Model\Course;
+  use App\Services\AuditService;
   class CourseService{
     private CourseProviderInterface $provider;
 
