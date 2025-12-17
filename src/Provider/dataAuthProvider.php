@@ -103,14 +103,46 @@ class DataAuthProvider implements AuthProviderInterface
 
     public function logout(): void
     {
-        if (isset($_SESSION["email"])) {
-            $this->auditService->logLogout($_SESSION["email"]);
-            session_unset();
-            session_destroy();
-            Response::json([], 200, "Logout succesfull");
-        } else {
-            Response::json([], 400, "Logout attempt failed");
+        // Expect a Bearer token for logout; revoke it in the api_token table
+        $token = get_bearer_token();
+        if ($token === null) {
+            Response::json([], 401, "Missing Bearer Token");
         }
+
+        $db = new \mysqli(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
+        if ($db->connect_error) {
+            Response::json([], 500, "DB connection error");
+        }
+
+        // Find user id for this token (even if expired/revoked status will be handled separately)
+        $hash = hash('sha256', $token);
+        $selectPrep = $db->prepare("SELECT userId FROM api_token WHERE token_hash=?");
+        $selectPrep->bind_param("s", $hash);
+        $selectPrep->execute();
+        $result = $selectPrep->get_result();
+        $row = $result->fetch_assoc();
+        if (!$row) {
+            $db->close();
+            Response::json([], 401, "Invalid token");
+        }
+        $userId = (int)$row['userId'];
+
+        // Get user email for audit logging
+        $selUser = $db->prepare("SELECT email FROM users WHERE userId=?");
+        $selUser->bind_param("i", $userId);
+        $selUser->execute();
+        $userRes = $selUser->get_result();
+        $userRow = $userRes->fetch_assoc();
+        $email = $userRow['email'] ?? '';
+
+        // Revoke the token (set revoked_at = NOW())
+        revoke_access_token($db, $token);
+
+        $ip = $_SERVER['REMOTE_ADDR'] ?? "UNKNOWN";
+        $this->auditService->logLogout($email, $ip, $userId);
+        $db->close();
+
+        Response::json([], 200, "Logout succesfull");
     }
 
     public function isAuthenticated(): ?bool

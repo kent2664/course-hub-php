@@ -45,14 +45,8 @@ try {
             //check the APi is booklist
             switch (basename($_SERVER["PATH_INFO"])) {
                 case "logout":
-                    if (isset($_SESSION["username"])) {
-                        $auditService->logLogout($_SESSION["username"]);
-                        session_unset();
-                        session_destroy();
-                        Response::json([],200,"User logout successfull.");
-                    } else {
-                        throw new Exception(Response::json([],400,"Logout error."), 400);
-                    }
+                    // Use provider logout which will revoke the bearer token
+                    $authProvider->logout();
                     break;
                 case "authme":
                     $authProvider->isAuthenticated();
