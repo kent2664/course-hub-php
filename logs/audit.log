@@ -1,15 +1,1 @@
-[2025-12-10 22:09:45] | IP: ::1 | USERNAME: tian | STATUS: FAILED
-[2025-12-10 22:09:49] | IP: ::1 | USERNAME: tiana | STATUS: SUCCESS
-[2025-12-13 22:30:32] | IP: ::1 | EMAIL: tiana@mail.com | STATUS: FAILED
-[2025-12-13 22:31:25] | IP: ::1 | EMAIL: tiana@mail.com | STATUS: FAILED
-[2025-12-13 22:31:31] | IP: ::1 | EMAIL: tiana@gmail.com | STATUS: FAILED
-[2025-12-13 22:31:33] | IP: ::1 | EMAIL: tiana@gmail.com | STATUS: FAILED
-[2025-12-13 22:31:34] | IP: ::1 | EMAIL: tiana@gmail.com | STATUS: FAILED
-[2025-12-13 22:31:35] | IP: ::1 | EMAIL: tiana@gmail.com | STATUS: FAILED
-[2025-12-16 00:26:42] | IP: ::1 | EMAIL: matheus@gmail.com | STATUS: SUCCESS
-[2025-12-16 00:27:23] | IP: ::1 | EMAIL: matheus@gmail.com | STATUS: SUCCESS
-[2025-12-16 03:06:32] | IP: ::1 | EMAIL: matheus@gmail.com | STATUS: SUCCESS
-[2025-12-16 04:41:05] | IP: ::1 | EMAIL: matheus@gmail.com | STATUS: SUCCESS
-[2025-12-16 04:42:27] | IP: ::1 | EMAIL: matheus@gmail.com | STATUS: FAILED
-[2025-12-16 04:42:35] | IP: ::1 | EMAIL: matheuvewobus@gmail.com | STATUS: FAILED
-[2025-12-17 00:11:45] | IP: ::1 | EMAIL: tiana@gmail.com | STATUS: FAILED
+[2025-12-16 20:46:46] | IP: ::1 | EMAIL: kenta@gmail.com | ACTION: LOGIN ATTEMPT | STATUS: SUCCESS | USER ID: 19

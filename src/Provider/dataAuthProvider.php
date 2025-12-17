@@ -63,17 +63,18 @@ class DataAuthProvider implements AuthProviderInterface
         if ($userData->num_rows === 0) {
             // User not found
             $ip = $_SERVER['REMOTE_ADDR'] ?? 'UNKNOWN';
-            $this->auditService->logLogin($email, false, $ip);
+            $this->auditService->logLogin($email, false, $ip, null);
             Response::json([], 400, "Failed login attempt");
         }
 
         $userInfo = $userData->fetch_assoc();
         $loadUser->close();
+        $userId = $userInfo["userId"];
 
         if (!isset($userInfo['passWord'])) {
             $db->close();
             $ip = $_SERVER['REMOTE_ADDR'] ?? 'UNKNOWN';
-            $this->auditService->logLogin($email, false, $ip);
+            $this->auditService->logLogin($email, false, $ip, $userId);
             Response::json([], 400, "Failed login attempt");
         }
 
@@ -82,7 +83,7 @@ class DataAuthProvider implements AuthProviderInterface
 
         if (!password_verify($password, $hash)) {
             $ip = $_SERVER['REMOTE_ADDR'] ?? 'UNKNOWN';
-            $this->auditService->logLogin($email, false, $ip);
+            $this->auditService->logLogin($email, false, $ip, $userId);
             Response::json([], 400, "Failed login attempt");
         }
 
@@ -91,14 +92,13 @@ class DataAuthProvider implements AuthProviderInterface
         $token = generate_token();
         store_access_token($db, $userid, $token);
         $db->close();
+        $ip = $_SERVER['REMOTE_ADDR'] ?? 'UNKNOWN';
+        $this->auditService->logLogin($email, true, $ip,$userId);
         json_response(json_writer([
             'access_token' => $token,
             'token_type' => 'Bearer',
             'expires_in' => ACCESS_TOKEN_TTL_SECONDS
         ]));
-        $ip = $_SERVER['REMOTE_ADDR'] ?? 'UNKNOWN';
-        $this->auditService->logLogin($email, true, $ip);
-        Response::json([], 200, 'Login successful');
     }
 
     public function logout(): void
