@@ -15,7 +15,7 @@ class DataAuthProvider implements AuthProviderInterface
         $this->auditService = new AuditService();
     }
 
-    public function login(string $email, string $password): bool
+    public function login(string $email, string $password): ?bool
     {
         $db = new \mysqli(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
         if ($db->connect_error) {
@@ -44,8 +44,8 @@ class DataAuthProvider implements AuthProviderInterface
             Response::json([], 400, "Failed login attempt");
         }
 
+        // Get the hashed and salted password from db
         $hash = $userInfo['passWord'];
-        $db->close();
 
         if (!password_verify($password, $hash)) {
             $ip = $_SERVER['REMOTE_ADDR'] ?? 'UNKNOWN';
@@ -54,8 +54,15 @@ class DataAuthProvider implements AuthProviderInterface
         }
 
         // Successful login
-        $_SESSION["email"] = $email;
-        $_SESSION["authenticated"] = true;
+        $userid = (int) $userInfo["userId"];
+        $token = generate_token();
+        store_access_token($db, $userid, $token);
+        $db->close();
+        json_response(json_writer([
+            'access_token' => $token,
+            'token_type' => 'Bearer',
+            'expires_in' => ACCESS_TOKEN_TTL_SECONDS
+        ]));
         $ip = $_SERVER['REMOTE_ADDR'] ?? 'UNKNOWN';
         $this->auditService->logLogin($email, true, $ip);
         Response::json([], 200, 'Login successful');

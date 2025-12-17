@@ -1,56 +1,44 @@
 <?php
-    require __DIR__.'/../src/Interface/AuthProviderInterface.php';
-    require __DIR__.'/../src/Interface/CourseProviderInterface.php';
-    require __DIR__.'/../src/Provider/InMemoryAuthProvider.php';
-    require __DIR__.'/../src/Provider/InMemoryCourseProvider.php';
-    require __DIR__.'/../src/Provider/dataCourseProvider.php';
-    require __DIR__.'/../src/Service/AuthService.php';
-    require __DIR__.'/../src/Service/CourseService.php';
-    require __DIR__.'/../src/Model/Course.php';
-
-    use App\Auth\InMemoryAuthProvider;
-    //use App\Course\InMemoryCourseProvider;
-    use App\Course\dataCourseProvider;
-    use App\Services\AuthService;
-    use App\Services\CourseService;
-    use App\Model\Course;
-
-use App\Providers\DataAuthProvider;
-session_start();
-
+require __DIR__ . '/../src/Interface/AuthProviderInterface.php';
+// require __DIR__ . '/../src/Interface/CourseProviderInterface.php';
+// require __DIR__ . '/../src/Provider/InMemoryCourseProvider.php';
+// require __DIR__ . '/../src/Provider/dataCourseProvider.php';
+require __DIR__ . '/../src/Service/AuthService.php';
+// require __DIR__ . '/../src/Service/CourseService.php';
+// require __DIR__ . '/../src/Model/Course.php';
 require __DIR__ . '/../src/Service/AuditService.php';
 require __DIR__ . '/../src/validation.php';
 require __DIR__ . '/../src/Common/Response.php';
 require __DIR__ . '/../src/Service/Functions.php';
 require __DIR__ . '/../src/Service/webconfig.php';
 require __DIR__ . '/../src/Provider/dataAuthProvider.php';
-use App\Auth\InMemoryAuthProvider;
-use App\Course\InMemoryCourseProvider;
+require __DIR__ . '/../src/Service/auth_token.php';
+// require __DIR__ . '/../src/Service/helpers.php';
+
+// use App\Course\dataCourseProvider;
 use App\Services\AuthService;
-use App\Services\CourseService;
+// use App\Services\CourseService;
+// use App\Model\Course;
+// use App\Course\InMemoryCourseProvider;
 use App\Services\AuditService;
 use Src\Common\Response;
-    //define course service with provider
-    $courseProvider = new dataCourseProvider();
-    $courseService = new CourseService($courseProvider); //connecting the implementor class which implements the interface to the class which consumes the interface.
+use App\Providers\DataAuthProvider;
+session_start();
+
+
+//define course service with provider
+// $courseProvider = new dataCourseProvider();
+// $courseService = new CourseService($courseProvider); //connecting the implementor class which implements the interface to the class which consumes the interface.
 
 $authProvider = new DataAuthProvider();
-// $authProvider = new InMemoryAuthProvider();
 $authService = new AuthService($authProvider); //connecting the implementor class which implements the interface to the class which consumes the interface.
 
 //define course service with provider
-$courseProvider = new InMemoryCourseProvider();
-$courseService = new CourseService($courseProvider); //connecting the implementor class which implements the interface to the class which consumes the interface.
+// $courseProvider = new InMemoryCourseProvider();
+// $courseService = new CourseService($courseProvider); //connecting the implementor class which implements the interface to the class which consumes the interface.
 $auditService = new AuditService();
 
-// sample codes
-// echo $authService->status() . "</br>";
 
-// echo $authService->attemptLogin('alice',"password123");
-// echo $authService->status()."</br>";
-
-// $provider->logout();
-// echo $authService->status(). "</br>";
 try {
     $errFlag = false;
     switch ($_SERVER["REQUEST_METHOD"]) {
@@ -67,17 +55,16 @@ try {
                         throw new Exception("Logout error", 400);
                     }
                     break;
-                case "auth/me":
-                    // Return current authenticated user info from session
-                    if (isset($_SESSION["authenticated"]) && $_SESSION["authenticated"] === true && isset($_SESSION["email"])) {
-                        $user = [
-                            'email' => $_SESSION["email"],
-                            'authenticated' => true
-                        ];
-                        Response::json($user, 200, ($_SESSION["email"] . " is logged in."));
-                    } else {
-                        Response::json([], 401, "No user logged in.");
+                case "authme":
+                    $db = new mysqli(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
+                    if ($db->connect_error){
+                        throw new Exception(json_writer(['error' => "Connection issue."]), 500);
                     }
+                    $userid = require_auth($db);
+                    json_response(json_writer([
+                        'user_id' => $userid,
+                        'message' => 'Authenticated'
+                    ]));
                     break;
                 case "mywork":
                     //implement the feature that takes achievement info with $myworkService
@@ -86,12 +73,12 @@ try {
                     //implement the feature that takes course info with $courseService
                     //echo "called ";
                     echo json_encode($courseService->getCourseList());
-                break;
+                    break;
                 case "searchcourse":
                     //login check needed
                     $authService->status();//check login status
                     //implement the feature that takes course info with $courseService
-                    if(isset($_REQUEST["target"]) || isset($_REQUEST["searchtxt"])){
+                    if (isset($_REQUEST["target"]) || isset($_REQUEST["searchtxt"])) {
                         //sanitize input
                         $target = input_sanitizer($_REQUEST["target"], 'text');
                         $searchtxt = input_sanitizer($_REQUEST["searchtxt"], 'text');
@@ -105,6 +92,7 @@ try {
             // when the form submit, this case will be executed.
             switch (basename($_SERVER["PATH_INFO"])) {
                 case "register":
+                    if($_POST["role"]==="admin"||$_POST["role"]==="teacher")
                     // Check and sanitize keys
                     checkKeys("email", "password", "role");
                     // Call the registerUser function
@@ -116,16 +104,15 @@ try {
                     // Define variables
                     $email = $_REQUEST["email"];
                     $password = $_REQUEST["password"];
-                    // Call the 
-                    $authProvider->login($email,$password);
+                    // Call the function
+                    $authProvider->login($email, $password);
                     break;
             }
             break;
 
     }
 } catch (Exception $err) {
-    http_response_code($err->getCode());
-    echo "Error: " . $err->getMessage();
+    json_response($err->getMessage(), $err->getCode());
 }
 
 ?>
