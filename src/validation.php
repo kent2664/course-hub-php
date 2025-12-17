@@ -1,5 +1,7 @@
 <?php
 
+use Src\Common\Response;
+
 function input_sanitizer(?string $value, string $type = 'text'): ?string
 {
     $value = trim($value);
@@ -12,7 +14,7 @@ function input_sanitizer(?string $value, string $type = 'text'): ?string
             if (!filter_var($value, FILTER_VALIDATE_EMAIL))
                 return null;
             return $value;
-        case "pass":
+        case "password":
             // Sanitize the password, removing those characters that can break the password (breaking a line, for example)
             $value = str_replace(["\r", "\n"], '', $value);
             return $value;
@@ -26,6 +28,7 @@ function checkKeys(string ...$keys): bool
 {
     foreach ($keys as $key) {
         if (!isset($_REQUEST[$key])) {
+            Response::json([],400,"Missing keys");
             throw new Exception("Invalid request.", 400);
         } else {
             $_REQUEST[$key] = input_sanitizer($_REQUEST[$key], $key);

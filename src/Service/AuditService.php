@@ -23,20 +23,20 @@ class AuditService
     }
 
     // This function will log every time someone login in, into an log audit file.
-    public function logLogin(string $username, bool $success, string $ipAddress): void{
+    public function logLogin(string $email, bool $success, string $ipAddress): void{
         $timestamp = date('Y-m-d H:i:s');
         $status = $success ? 'SUCCESS' : 'FAILED';
-        $logEntry = "[{$timestamp}] | IP: {$ipAddress} | USERNAME: {$username} | STATUS: {$status}"  . "\n";
+        $logEntry = "[{$timestamp}] | IP: {$ipAddress} | EMAIL: {$email} | STATUS: {$status}"  . "\n";
 
         file_put_contents($this->logFile, $logEntry, FILE_APPEND);
     }
 
     // This function will log every time someone logout, into an log audit file.
-    public function logLogout(string $username, string $ipAddress = null): void
+    public function logLogout(string $email, string $ipAddress = null): void
     {
 
         $timestamp = date('Y-m-d H:i:s');
-        $logEntry = "[{$timestamp}] | IP: {$ipAddress} | USERNAME: {$username} | STATUS: LOGOUT"  . "\n";
+        $logEntry = "[{$timestamp}] | IP: {$ipAddress} | EMAIL: {$email} | STATUS: LOGOUT"  . "\n";
 
         file_put_contents($this->logFile, $logEntry, FILE_APPEND);
     }
