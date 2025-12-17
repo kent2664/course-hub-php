@@ -9,7 +9,6 @@ require __DIR__ . '/../src/Service/AuthService.php';
 require __DIR__ . '/../src/Service/AuditService.php';
 require __DIR__ . '/../src/validation.php';
 require __DIR__ . '/../src/Common/Response.php';
-require __DIR__ . '/../src/Service/Functions.php';
 require __DIR__ . '/../src/Service/webconfig.php';
 require __DIR__ . '/../src/Provider/dataAuthProvider.php';
 require __DIR__ . '/../src/Service/auth_token.php';
@@ -50,21 +49,13 @@ try {
                         $auditService->logLogout($_SESSION["username"]);
                         session_unset();
                         session_destroy();
-                        echo "Logged out successfully!";
+                        Response::json([],200,"User logout successfull.");
                     } else {
-                        throw new Exception("Logout error", 400);
+                        throw new Exception(Response::json([],400,"Logout error."), 400);
                     }
                     break;
                 case "authme":
-                    $db = new mysqli(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
-                    if ($db->connect_error){
-                        throw new Exception(json_writer(['error' => "Connection issue."]), 500);
-                    }
-                    $userid = require_auth($db);
-                    json_response(json_writer([
-                        'user_id' => $userid,
-                        'message' => 'Authenticated'
-                    ]));
+                    $authProvider->isAuthenticated();
                     break;
                 case "mywork":
                     //implement the feature that takes achievement info with $myworkService
@@ -92,11 +83,18 @@ try {
             // when the form submit, this case will be executed.
             switch (basename($_SERVER["PATH_INFO"])) {
                 case "register":
-                    if($_POST["role"]==="admin"||$_POST["role"]==="teacher")
+                    if(!isset($_REQUEST["role"])){
+                        $_REQUEST["role"] = "student";
+                    } 
+                    if($_REQUEST["role"]=="teacher"||$_REQUEST["role"]=="admin"){
+                        if(!$authProvider->isAdmin()){
+                            Response::json([],400,"Not authorized");
+                        }
+                    }
                     // Check and sanitize keys
                     checkKeys("email", "password", "role");
                     // Call the registerUser function
-                    registerUser($_REQUEST["email"], $_REQUEST["password"], $_REQUEST["role"]);
+                    $authProvider->registerUser($_REQUEST["email"], $_REQUEST["password"], $_REQUEST["role"]);
                     break;
                 case "login":
                     // Check and sanitize the keys

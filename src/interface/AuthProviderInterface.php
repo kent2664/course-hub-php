@@ -6,7 +6,9 @@
 
         public function logout(): void;
 
-        public function isAuthenticated(): bool;
+        public function registerUser($email, $password, $role, $deleteFlag = 0): void;
+
+        public function isAuthenticated(): ?bool;
 
         public function getCurrentUser(): ?array;
     }

@@ -15,6 +15,39 @@ class DataAuthProvider implements AuthProviderInterface
         $this->auditService = new AuditService();
     }
 
+    public function registerUser($email, $password, $role, $deleteFlag = 0): void
+    {
+        try {
+            $errFlag = false;
+            $db = new \mysqli(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
+            if ($db->connect_error) {
+                throw new \Exception("DB error: " . $db->connect_error, 500);
+            }
+            $insertPrep = $db->prepare("INSERT INTO `users` (passWord,email,role,deleteFlag) VALUES (?,?,?,?)");
+            $selectPrep = $db->prepare("SELECT userId FROM `users` WHERE email=?");
+            $selectPrep->bind_param("s", $email);
+            $password = password_hash($password, PASSWORD_BCRYPT, ['cost' => 10]);
+            $insertPrep->bind_param("sssi", $password, $email, $role, $deleteFlag);
+            $selectPrep->execute();
+            $result = $selectPrep->get_result();
+            if ($result->num_rows > 0)
+                $errFlag = true;
+            else {
+                if (!$insertPrep->execute())
+                    $errFlag = true;
+            }
+            $db->close();
+            if (!$errFlag)
+                Response::json([], 200, "Record Added");
+            else {
+                throw new \Exception("Record insertion failed.", 400);
+            }
+        } catch (\Exception $err) {
+            Response::json([], $err->getCode(), $err->getMessage());
+        }
+
+    }
+
     public function login(string $email, string $password): ?bool
     {
         $db = new \mysqli(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
@@ -80,9 +113,92 @@ class DataAuthProvider implements AuthProviderInterface
         }
     }
 
-    public function isAuthenticated(): bool
+    public function isAuthenticated(): ?bool
     {
-        return false;
+        $db = new \mysqli(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
+        if ($db->connect_error) {
+            throw new Exception(json_writer(['error' => "Connection issue."]), 500);
+        }
+        $userid = require_auth($db);
+        if ($userid == null) {
+            echo "null";
+        }
+        json_response(json_writer([
+            'user_id' => $userid,
+            'message' => 'Authenticated'
+        ]));
+    }
+
+    public function isAdmin(): bool
+    {
+        $db = new \mysqli(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
+        if ($db->connect_error) {
+            throw new Exception(json_writer(['error' => "Connection issue."]), 500);
+        }
+        $userid = require_auth($db);
+        $selectPrep = $db->prepare("SELECT role FROM users WHERE userId=?");
+        $selectPrep->bind_param("i", $userid);
+        $selectPrep->execute();
+        $userInfo = $selectPrep->get_result();
+        $userData = $userInfo->fetch_assoc();
+        if ($userData["role"] == "admin") {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public function isStaff(): bool
+    {
+        $db = new \mysqli(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
+        if ($db->connect_error) {
+            throw new Exception(json_writer(['error' => "Connection issue."]), 500);
+        }
+        $userid = require_auth($db);
+        $selectPrep = $db->prepare("SELECT role FROM users WHERE userId=?");
+        $selectPrep->bind_param("i", $userid);
+        $selectPrep->execute();
+        $userInfo = $selectPrep->get_result();
+        $userData = $userInfo->fetch_assoc();
+        if ($userData["role"] == "admin" || $userData["role"] == "teacher") {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public function isTeacher(): bool
+    {
+        $db = new \mysqli(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
+        if ($db->connect_error) {
+            throw new Exception(json_writer(['error' => "Connection issue."]), 500);
+        }
+        $userid = require_auth($db);
+        $selectPrep = $db->prepare("SELECT role FROM users WHERE userId=?");
+        $selectPrep->bind_param("i", $userid);
+        $selectPrep->execute();
+        $userInfo = $selectPrep->get_result();
+        $userData = $userInfo->fetch_assoc();
+        if ($userData["role"] == "teacher") {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public function getRole(): ?string
+    {
+        $db = new \mysqli(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
+        if ($db->connect_error) {
+            throw new Exception(json_writer(['error' => "Connection issue."]), 500);
+        }
+        $userid = require_auth($db);
+        $selectPrep = $db->prepare("SELECT role FROM users WHERE userId=?");
+        $selectPrep->bind_param("i", $userid);
+        $selectPrep->execute();
+        $userInfo = $selectPrep->get_result();
+        $userData = $userInfo->fetch_assoc();
+        return $userData["role"];
     }
 
     public function getCurrentUser(): ?array
