@@ -23,6 +23,7 @@ class DbMyWorkProvider implements MyWorkProviderInterface //Defines a database-b
         //Executes the query with the author value bound
         //Returns all rows as an associative array
 
+        try{
         if ($author === '') {
             $stmt = $this->pdo->query("SELECT * FROM mywork");
         } else {
@@ -31,6 +32,12 @@ class DbMyWorkProvider implements MyWorkProviderInterface //Defines a database-b
         }
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC); //::=Call the add method directly from the class
+        }
+        //handling error        
+        catch (\Exception $e){
+            throw new \Exception($e->getMessage(), $e->getCode());
+        }
+
     }
 
     // Filter by student
@@ -40,39 +47,58 @@ class DbMyWorkProvider implements MyWorkProviderInterface //Defines a database-b
 
     public function getWorkByStudent(string $student): array
     {
+        try{
         $stmt = $this->pdo->prepare("SELECT * FROM mywork WHERE student = ?");
         $stmt->execute([$student]);
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        }
+        //handling error        
+        catch (\Exception $e){
+            throw new \Exception($e->getMessage(), $e->getCode());
+        }
     }
 
     // fetching all data
         //
     public function getAllWork(): array
     {
+        try{
         $stmt = $this->pdo->query("SELECT * FROM mywork");
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        }
+        //handling error        
+        catch (\Exception $e){
+            throw new \Exception($e->getMessage(), $e->getCode());
+        }
     }
 
     // Update grade based on courseId
     public function updateGrade(string $courseId, string $grade): array
-    {
-        $update = $this->pdo->prepare(
-            "UPDATE mywork 
-            SET grade = :grade, status = 'graded'
-            WHERE courseId = :courseId"
-        );
-        $update->execute([
-            ':grade'    => $grade,
-            ':courseId' => $courseId,
-        ]);
+    {   
+        try{
+            $update = $this->pdo->prepare(
+                "UPDATE mywork 
+                SET grade = :grade, status = 'graded'
+                WHERE courseId = :courseId"
+            );
+            $update->execute([
+                ':grade'    => $grade,
+                ':courseId' => $courseId,
+            ]);
 
-        // Re-fetch updated rows to return them
-        $select = $this->pdo->prepare(
-            "SELECT * FROM mywork WHERE courseId = ?"
-        );
-        $select->execute([$courseId]);
+            // Re-fetch updated rows to return them
+            $select = $this->pdo->prepare(
+                "SELECT * FROM mywork WHERE courseId = ?"
+            );
+            $select->execute([$courseId]);
 
-        return $select->fetchAll(PDO::FETCH_ASSOC);
+            return $select->fetchAll(PDO::FETCH_ASSOC);
+        }
+        //handling error        
+        catch (\Exception $e){
+            throw new \Exception($e->getMessage(), $e->getCode());
+        }
+
     }
 }
