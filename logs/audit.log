@@ -3,3 +3,11 @@
 
 [2025-12-17 13:01:49] | IP: ::1 | EMAIL: kenta@gmail.com | ACTION: LOGIN ATTEMPT | STATUS: SUCCESS | USER ID: 19
 [2025-12-17 13:01:52] | IP: ::1 | EMAIL: kenta@gmail.com | ACTION: LOGIN ATTEMPT | STATUS: SUCCESS | USER ID: 19
+[2025-12-18 19:02:51] | IP: ::1 | EMAIL: someffreddvfedwodne@gmai.com | ACTION: REGISTER | STATUS: SUCCESS | USER ROLE: student
+
+[2025-12-18 19:02:57] | IP: ::1 | EMAIL: someffrefeddvfedwodne@gmai.com | ACTION: REGISTER | STATUS: SUCCESS | USER ROLE: admin
+
+[2025-12-18 19:04:23] | IP: ::1 | EMAIL: someffrefedvedvfedwodne@gmai.com | ACTION: REGISTER | STATUS: SUCCESS | USER ROLE: admin
+
+[2025-12-18 19:04:26] | IP: ::1 | EMAIL: someffrefedvedvfedwodne@gmai.com | ACTION: REGISTER | STATUS: FAILED | USER ROLE: admin
+

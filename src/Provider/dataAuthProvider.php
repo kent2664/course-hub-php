@@ -37,9 +37,15 @@ class DataAuthProvider implements AuthProviderInterface
                     $errFlag = true;
             }
             $db->close();
-            if (!$errFlag)
+
+            if (!$errFlag) {
+                $ip = $_SERVER['REMOTE_ADDR'] ?? 'UNKNOWN';
+                $this->auditService->logRegister($email, $ip, $role, "SUCCESS");
                 Response::json([], 200, "Record Added");
-            else {
+
+            } else {
+                $ip = $_SERVER['REMOTE_ADDR'] ?? 'UNKNOWN';
+                $this->auditService->logRegister($email, $ip, $role, "FAILED");
                 throw new \Exception("Record insertion failed.", 400);
             }
         } catch (\Exception $err) {
