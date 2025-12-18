@@ -27,3 +27,4 @@
 [2025-12-18 07:53:23] | USERID: 20 | STATUS: SUCCESS | MESSAGE: Successfully inserted course 
 [2025-12-18 07:55:43] | USERID: 20 | STATUS: SUCCESS | MESSAGE: Successfully deleted course with ID: C97
 [2025-12-18 07:55:58] | USERID: 20 | STATUS: FAILED | MESSAGE: Failed to delete course with ID: C97
+[2025-12-18 13:15:14] | IP: ::1 | EMAIL: kenta2@gmail.com | ACTION: LOGIN ATTEMPT | STATUS: SUCCESS | USER ID: 20

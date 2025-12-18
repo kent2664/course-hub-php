@@ -77,7 +77,7 @@ try {
                     // 2. query (JSON)
                     header('Content-Type: application/json');
                     
-                    checkKeys("author");
+                    //checkKeys("author");
                     if(isset($_GET["author"])){
                          // 2-1 Filter by Author: Handles requests like /mywork?author=Alice
                         $author = htmlspecialchars($_GET["author"], ENT_QUOTES, 'UTF-8'); // Sanitize input to prevent XSS/injection attacks.
