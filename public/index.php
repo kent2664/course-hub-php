@@ -196,25 +196,7 @@ try {
                     Response::json($courseService->insertCourse($courseData), 200, "Course inserted successfully.");
                 break;
                 case "updatecourse":
-                    //check login status
-                    if(!$authProvider->isAdmin()){
-                           Response::json([],400,"Not authorized");
-                    }
-                    //sanitize input
-                    checkKeys("id", "author", "title", "category", "rating", "hours", "level", "image");
 
-                    $courseData = new Course(
-                            $_REQUEST["id"],
-                            $_REQUEST["author"] == "" ? NULL: $_REQUEST["author"],
-                            $_REQUEST["title"] == "" ? NULL: $_REQUEST["title"],
-                            $_REQUEST["category"]== "" ? NULL: $_REQUEST["category"],
-                            $_REQUEST["rating"]== "" ? NULL: $_REQUEST["rating"],
-                            $_REQUEST["hours"]== "" ? NULL: $_REQUEST["hours"],
-                            $_REQUEST["level"]== "" ? NULL: $_REQUEST["level"],
-                            $_REQUEST["image"]== "" ? NULL: $_REQUEST["image"]
-                        );
-                    Response::json($courseService->updateCourse($courseData), 200, "Course updated successfully.");
-                break;
                 case "deletecourse":
                     if(!$authProvider->isAdmin()){
                            Response::json([],400,"Not authorized");
@@ -225,6 +207,60 @@ try {
                 break;
             }
             break;
+        case "PUT":
+            switch (basename($_SERVER["PATH_INFO"])) {
+                case "updatecourse":
+
+                //check login status
+                    if(!$authProvider->isAdmin()){
+                           Response::json([],400,"Not authorized");
+                    }
+                    //sanitize input
+                    //checkKeys("id", "author", "title", "category", "rating", "hours", "level", "image");
+                    $json = file_get_contents('php://input');
+
+                    // Decode the JSON data into an associative array
+                    $data = json_decode($json, true);
+
+                    force_array_keys($data, ["id", "author", "title", "category", "rating", "hours", "level", "image"]);
+
+                    $courseData = new Course(
+                            $data["id"],
+                            $data["author"] == "" ? NULL: $data["author"],
+                            $data["title"] == "" ? NULL: $data["title"],
+                            $data["category"]== "" ? NULL: $data["category"],
+                            $data["rating"]== "" ? NULL: $data["rating"],
+                            $data["hours"]== "" ? NULL: $data["hours"],
+                            $data["level"]== "" ? NULL: $data["level"],
+                            $data["image"]== "" ? NULL: $data["image"]
+                        );
+                    Response::json($courseService->updateCourse($courseData), 200, "Course updated successfully.");
+                break;
+                default:
+                    Response::json([], 404, "Endpoint not found.");
+                break;
+            }
+        break;
+        case "DELETE":
+            switch (basename($_SERVER["PATH_INFO"])) {
+                case "deletecourse":
+                    if(!$authProvider->isAdmin()){
+                           Response::json([],400,"Not authorized");
+                    }
+                    $json = file_get_contents('php://input');
+
+                    // Decode the JSON data into an associative array
+                    $data = json_decode($json, true);
+
+                    force_array_keys($data, ["id"]);
+
+                    Response::json($courseService->deleteCourse($data["id"]), 200, "Course deleted successfully.");
+                break;
+                default:
+                    Response::json([], 404, "Endpoint not found.");
+                    break;
+            }
+        break;
 
     }
 } catch (Exception $err) {

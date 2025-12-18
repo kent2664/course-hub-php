@@ -36,5 +36,16 @@ function checkKeys(string ...$keys): bool
     }
     return true;
 }
+// Ensures that the provided data array contains all specified keys
+function force_array_keys($data, $keys) {
+    foreach ($keys as &$key) {
+        if (!isset($data[$key])) {
+            Response::json([],400,"Missing keys");
+            throw new Exception("Missing key: " . $key);
+        }else {
+            $data[$key] = input_sanitizer($data[$key], $key);
+        }
+    }
+}
 
 ?>
