@@ -23,10 +23,11 @@ class AuditService
     }
 
     // This function will log every time someone login in, into an log audit file.
-    public function logLogin(string $email, bool $success, string $ipAddress, ?int $id): void{
+    public function logLogin(string $email, bool $success, string $ipAddress, ?int $id): void
+    {
         $timestamp = date('Y-m-d H:i:s');
         $status = $success ? 'SUCCESS' : 'FAILED';
-        $logEntry = "[{$timestamp}] | IP: {$ipAddress} | EMAIL: {$email} | ACTION: LOGIN ATTEMPT | STATUS: {$status} | USER ID: {$id}"  . "\n";
+        $logEntry = "[{$timestamp}] | IP: {$ipAddress} | EMAIL: {$email} | ACTION: LOGIN ATTEMPT | STATUS: {$status} | USER ID: {$id}" . "\n";
 
         file_put_contents($this->logFile, $logEntry, FILE_APPEND);
     }
@@ -36,7 +37,26 @@ class AuditService
     {
 
         $timestamp = date('Y-m-d H:i:s');
-        $logEntry = "[{$timestamp}] | IP: {$ipAddress} | EMAIL: {$email} | ACTION: LOGOUT | USER ID: {$id}"  . "\n"  . "\n";
+        $logEntry = "[{$timestamp}] | IP: {$ipAddress} | EMAIL: {$email} | ACTION: LOGOUT | USER ID: {$id}" . "\n" . "\n";
+
+        file_put_contents($this->logFile, $logEntry, FILE_APPEND);
+    }
+
+    public function logRegister(string $email, string $ipAddress, string $role, string $message): void
+    {
+
+        $timestamp = date('Y-m-d H:i:s');
+        $logEntry = "[{$timestamp}] | IP: {$ipAddress} | EMAIL: {$email} | ACTION: REGISTER | STATUS: {$message} | USER ROLE: {$role}" . "\n" . "\n";
+
+        file_put_contents($this->logFile, $logEntry, FILE_APPEND);
+    }
+
+    // This function will log every time someone login in, into an log audit file.
+    public function outputLog(string $userid, bool $success, string $message): void
+    {
+        $timestamp = date('Y-m-d H:i:s');
+        $status = $success ? 'SUCCESS' : 'FAILED';
+        $logEntry = "[{$timestamp}] | USERID: {$userid} | STATUS: {$status} | MESSAGE: {$message}" . "\n";
 
         file_put_contents($this->logFile, $logEntry, FILE_APPEND);
     }
