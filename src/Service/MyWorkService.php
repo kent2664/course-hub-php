@@ -9,6 +9,7 @@ class MyWorkService
 {
     private MyWorkProviderInterface $provider; //handles data access
     private AuthService $authService; //handles authentication & authorization
+    private AuditService $auditService;
 
     //Constructor. Runs when the object is created and receives $provider and $authService
         ////Stores the passed-in $provider and $authService into the object’s properties.
@@ -16,6 +17,7 @@ class MyWorkService
     {
         $this->provider    = $provider;
         $this->authService = $authService;
+        $this->auditService = new AuditService();
     }
 
     

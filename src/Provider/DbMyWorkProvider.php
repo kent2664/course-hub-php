@@ -87,17 +87,24 @@ class DbMyWorkProvider implements MyWorkProviderInterface //Defines a database-b
                 ':courseId' => $courseId,
             ]);
 
+            $db = new \mysqli(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
+            $userid = require_auth($db);
+
             // Re-fetch updated rows to return them
             $select = $this->pdo->prepare(
                 "SELECT * FROM mywork WHERE courseId = ?"
             );
             $select->execute([$courseId]);
 
+            $this->auditService->outputLog($userid, true, "Successfully updated course grade for courseId: $courseId");
+
             return $select->fetchAll(PDO::FETCH_ASSOC);
         }
         //handling error        
         catch (\Exception $e){
+            $this->auditService->outputLog($userid, false, "Failed to update course grade for courseId: $courseId");
             throw new \Exception($e->getMessage(), $e->getCode());
+
         }
 
     }
