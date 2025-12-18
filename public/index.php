@@ -1,72 +1,60 @@
 <?php
-require __DIR__ . '/../src/Interface/AuthProviderInterface.php';
-// require __DIR__ . '/../src/Interface/CourseProviderInterface.php';
-// require __DIR__ . '/../src/Provider/InMemoryCourseProvider.php';
-// require __DIR__ . '/../src/Provider/dataCourseProvider.php';
-require __DIR__ . '/../src/Service/AuthService.php';
-// require __DIR__ . '/../src/Service/CourseService.php';
-// require __DIR__ . '/../src/Model/Course.php';
-require __DIR__ . '/../src/Service/AuditService.php';
-require __DIR__ . '/../src/validation.php';
-require __DIR__ . '/../src/Common/Response.php';
-require __DIR__ . '/../src/Service/webconfig.php';
-require __DIR__ . '/../src/Provider/dataAuthProvider.php';
-require __DIR__ . '/../src/Service/auth_token.php';
+    require __DIR__.'/../src/Interface/AuthProviderInterface.php';
+    require __DIR__.'/../src/Interface/CourseProviderInterface.php';
+    require __DIR__.'/../src/Provider/InMemoryAuthProvider.php';
+    require __DIR__.'/../src/Provider/InMemoryCourseProvider.php';
+    require __DIR__.'/../src/Provider/dataCourseProvider.php';
+    require __DIR__.'/../src/Service/AuthService.php';
+    require __DIR__.'/../src/Service/CourseService.php';
+    require __DIR__.'/../src/Model/Course.php';
+    require __DIR__ . '/../src/Service/AuditService.php';
+    require __DIR__ . '/../src/validation.php';
+    require __DIR__ . '/../src/Common/Response.php';
+    require __DIR__ . '/../src/Provider/dataAuthProvider.php';
+
+    require __DIR__ . '/../src/Service/webconfig.php';
+    require __DIR__ . '/../src/Service/auth_token.php';
 // require __DIR__ . '/../src/Service/helpers.php';
 
-// use App\Course\dataCourseProvider;
-use App\Services\AuthService;
-// use App\Services\CourseService;
-// use App\Model\Course;
-// use App\Course\InMemoryCourseProvider;
-use App\Services\AuditService;
-use Src\Common\Response;
-use App\Providers\DataAuthProvider;
-session_start();
+    require __DIR__.'/../src/Interface/MyWorkProviderInterface.php'; //interface
+    require __DIR__.'/../src/Provider/DbMyWorkProvider.php'; //data processing
+    require __DIR__.'/../src/Service/MyWorkService.php';//business logic
+    
+
+    //use App\Course\InMemoryCourseProvider;
+    use App\Course\dataCourseProvider;
+    use App\Services\AuthService;
+    use App\Services\CourseService;
+    use App\Model\Course;
+
+    use App\Services\AuditService;
+    use Src\Common\Response;
+    use App\Providers\DataAuthProvider;
+
+    use App\Services\MyWorkService;
+    use App\MyWork\DbMyWorkProvider;
+   session_start();
 
 
 //define course service with provider
 // $courseProvider = new dataCourseProvider();
 // $courseService = new CourseService($courseProvider); //connecting the implementor class which implements the interface to the class which consumes the interface.
 
-$authProvider = new DataAuthProvider();
-$authService = new AuthService($authProvider); //connecting the implementor class which implements the interface to the class which consumes the interface.
+    $authProvider = new DataAuthProvider();
+    $authService = new AuthService($authProvider); //connecting the implementor class which implements the interface to the class which consumes the interface.
 
 //define course service with provider
 // $courseProvider = new InMemoryCourseProvider();
 // $courseService = new CourseService($courseProvider); //connecting the implementor class which implements the interface to the class which consumes the interface.
-$auditService = new AuditService();
     // error_reporting(E_ALL);
     // ini_set("display_errors", 1);
-    require __DIR__.'/../src/Interface/CourseProviderInterface.php';
-    require __DIR__.'/../src/Provider/InMemoryAuthProvider.php';
-    require __DIR__.'/../src/Provider/InMemoryCourseProvider.php';
-    require __DIR__.'/../src/Provider/dataCourseProvider.php';
-    require __DIR__.'/../src/Service/CourseService.php';
-    require __DIR__.'/../src/Model/Course.php';
-    require __DIR__.'/../src/Interface/MyWorkProviderInterface.php'; //interface
-    require __DIR__.'/../src/Provider/DbMyWorkProvider.php'; //data processing
-    require __DIR__.'/../src/Service/MyWorkService.php';//business logic
-    require __DIR__ . '/../src/Service/Functions.php';
-    
-    use App\Auth\InMemoryAuthProvider;
-    //use App\Course\InMemoryCourseProvider;
-    use App\Course\dataCourseProvider;
-    use App\Services\CourseService;
-    // use App\MyWork\InMemoryMyWorkProvider;
-    use App\Services\MyWorkService;
-    use App\MyWork\DbMyWorkProvider;
-    use App\Model\Course;
-    use App\Course\InMemoryCourseProvider;
-
-    session_start();
+   
 
     //define course service with provider
-    // $myworkProvider = new InMemoryMyWorkProvider(); // creates a provider object to handle MyWork data.
-    // $myworkService = new MyWorkService($myworkProvider, $authService); //for MyWork business logic, injecting the $authService for permission checks.
     $myworkProvider = new DbMyWorkProvider($pdo);
     $myworkService = new MyWorkService($myworkProvider, $authService);
-    $courseProvider = new dataCourseProvider();
+    $auditService = new AuditService();
+    $courseProvider = new dataCourseProvider($auditService);
     // $courseProvider = new InMemoryCourseProvider();
     $courseService = new CourseService($courseProvider); //connecting the implementor class which implements the interface to the class which consumes the interface.
 
@@ -85,16 +73,6 @@ try {
                 break;
 
                 case "mywork":
-                    // --- CONSOLIDATED MYWORK GET REQUESTS ---
-                    // This endpoint handles both /mywork?author=X and /mywork?student=Y queries.
-                    
-                    // 1.login check
-                    // if ($authService->status() !== 'logged_in') {
-                    //     header('Content-Type: application/json');
-                    //     http_response_code(401); // Unauthorized
-                    //     echo json_encode(["success" => false, "message" => "Login is required to access MyWork data."]);
-                    //     break;
-                    // } 
 
                     // 2. query (JSON)
                     header('Content-Type: application/json');
@@ -121,27 +99,30 @@ try {
                     }
                 break;
 
-                    break;
                 case "authme":
                     $authProvider->isAuthenticated();
                     break;
                 case "courses":
                     //implement the feature that takes course info with $courseService
-                    //echo "called ";
-                    echo json_encode($courseService->getCourseList());
-                    break;
+                    echo "called ";
+                    Response::json($courseService->getCourseList(), 200, "Course list fetched successfully.");
+                break;
                 case "searchcourse":
                     //login check needed
                     $authService->status();//check login status
+
+                    checkKeys("target", "searchtxt");
                     //implement the feature that takes course info with $courseService
-                    if (isset($_REQUEST["target"]) || isset($_REQUEST["searchtxt"])) {
-                        //sanitize input
-                        $target = input_sanitizer($_REQUEST["target"], 'text');
-                        $searchtxt = input_sanitizer($_REQUEST["searchtxt"], 'text');
-                        print_r($courseService->searchCourseList($target, $searchtxt));
-                    } else {
-                        echo "Invalid search request.";
-                    }
+  
+                    //sanitize input
+                    $target = $_REQUEST["target"];;
+                    $searchtxt = $_REQUEST["searchtxt"];
+                    Response::json($courseService->searchCourseList($target, $searchtxt), 200, "Search results for '$searchtxt' in '$target'.");
+                break;
+                default: {
+                    Response::json([], 404, "Endpoint not found.");
+
+                } 
             }
             break;
         case "POST":
@@ -210,6 +191,45 @@ try {
                     Response::json($updatedWork, 200,"Success to serching.");
 
                     break;
+                case "insertcourse":
+                    //login check needed
+                    //$authService->status();//check login status
+                    //sanitize input
+                    checkKeys("id", "author", "title", "category", "rating", "hours", "level", "image");
+                    $courseData = new Course(
+                            $_REQUEST["id"],
+                            $_REQUEST["author"],
+                            $_REQUEST["title"],
+                            $_REQUEST["category"],
+                            $_REQUEST["rating"],
+                            $_REQUEST["hours"],
+                            $_REQUEST["level"],
+                            $_REQUEST["image"]
+                        );
+                    Response::json($courseService->insertCourse($courseData), 200, "Course inserted successfully.");
+                break;
+                case "updatecourse":
+                    $authService->status();//check login status
+                    //sanitize input
+                    checkKeys("id", "author", "title", "category", "rating", "hours", "level", "image");
+
+                    $courseData = new Course(
+                            $_REQUEST["id"],
+                            $_REQUEST["author"] == "" ? NULL: $_REQUEST["author"],
+                            $_REQUEST["title"] == "" ? NULL: $_REQUEST["title"],
+                            $_REQUEST["category"]== "" ? NULL: $_REQUEST["category"],
+                            $_REQUEST["rating"]== "" ? NULL: $_REQUEST["rating"],
+                            $_REQUEST["hours"]== "" ? NULL: $_REQUEST["hours"],
+                            $_REQUEST["level"]== "" ? NULL: $_REQUEST["level"],
+                            $_REQUEST["image"]== "" ? NULL: $_REQUEST["image"]
+                        );
+                    Response::json($courseService->updateCourse($courseData), 200, "Course updated successfully.");
+                break;
+                case "deletecourse":
+                    $authService->status();//check login status
+                    checkKeys("id");
+                    Response::json($courseService->deleteCourse($_REQUEST["id"]), 200, "Course deleted successfully.");
+                break;
             }
             break;
 

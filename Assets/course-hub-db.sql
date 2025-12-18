@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Dec 12, 2025 at 03:42 AM
+-- Generation Time: Dec 17, 2025 at 11:15 PM
 -- Server version: 8.0.44
 -- PHP Version: 8.2.29
 
@@ -20,6 +20,53 @@ SET time_zone = "+00:00";
 --
 -- Database: `course-hub-db`
 --
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `api_token`
+--
+
+CREATE TABLE `api_token` (
+  `id` bigint UNSIGNED NOT NULL,
+  `userId` int NOT NULL,
+  `token_hash` varchar(64) COLLATE utf8mb4_general_ci NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `expires_at` timestamp NOT NULL,
+  `revoked_at` timestamp NULL DEFAULT NULL,
+  `last_used_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `api_token`
+--
+
+INSERT INTO `api_token` (`id`, `userId`, `token_hash`, `created_at`, `expires_at`, `revoked_at`, `last_used_at`) VALUES
+(1, 18, '962aa38dacb7a82cbca11f7c5f62b8d9745f22c630517ab4a6f6f51591817f4d', '2025-12-16 22:24:07', '2025-12-17 07:24:07', NULL, NULL),
+(2, 18, '685d02c26d908a3b5db145c4e1d9538458d5cb4cbf60edd4a97037a1e6dc74b1', '2025-12-16 22:30:02', '2025-12-17 07:30:02', NULL, '2025-12-16 22:33:37'),
+(3, 18, '102a7e6c6556858359547c59fcce9dcad6eb243558a521675ada0b9989560183', '2025-12-17 00:10:32', '2025-12-17 09:10:32', NULL, '2025-12-17 00:11:59'),
+(4, 17, 'e8c8867216dcfe5e88e0e7a5fa434db898dc78ecf10f54ce6871314fc905559c', '2025-12-17 00:11:51', '2025-12-17 09:11:51', NULL, '2025-12-17 00:12:07'),
+(5, 17, '82fc44bd78621df47c544e81a22607caa84b1467cd16c9b36044290f5398d7c8', '2025-12-17 00:17:21', '2025-12-17 01:17:21', NULL, NULL),
+(6, 17, '27e909f13623d53d53e097b34b8e1db24ced6651223fa88e0d6cff624e70286c', '2025-12-17 00:25:07', '2025-12-17 01:25:07', NULL, NULL),
+(7, 17, '3b9d1a66d018f94b7e7a5b9188dd4163847e10558d646c319715a14f40f6bff1', '2025-12-17 00:27:24', '2025-12-17 00:28:24', NULL, '2025-12-17 00:28:04'),
+(8, 22, 'e01be2a93d52ba0fd264e5e44e53ba2c7b976b41646f657fbfd594551373854f', '2025-12-17 01:00:26', '2025-12-17 02:00:26', NULL, '2025-12-17 01:49:32'),
+(9, 22, '7fbc68b549b6d0573948903c462d312c7bb8ccd94734c6ae3ecf5fc536161cb4', '2025-12-17 01:49:58', '2025-12-17 02:49:58', NULL, '2025-12-17 01:50:08'),
+(10, 19, '8e87cb19a64f2a908911eaa65ead75d2af8bd972c2befb3eea7ddaaa7163fbc2', '2025-12-17 01:50:24', '2025-12-17 02:50:24', NULL, '2025-12-17 02:09:58'),
+(11, 19, '5f5266fe07a50b84be44b6aab67873790ed84d1b992e313de1d85f30f363bb6e', '2025-12-17 02:17:30', '2025-12-17 03:17:30', NULL, '2025-12-17 02:50:07'),
+(12, 18, '390186d98125e819573820be7a64dd990765aa404f154148c0021006fcaae88c', '2025-12-17 02:50:48', '2025-12-17 03:50:48', NULL, '2025-12-17 02:51:02'),
+(13, 18, '685552d2421c1ef731b4f0fa3bc00f1744d4892c5ea93f19391de094589872cf', '2025-12-17 04:03:20', '2025-12-17 05:03:20', NULL, '2025-12-17 04:04:59'),
+(14, 19, '06ee33badcaa782fa7dc236ed05b1ba3fdcdb406b549afeabe5552708443a2e7', '2025-12-17 04:05:32', '2025-12-17 05:05:32', NULL, '2025-12-17 04:18:33'),
+(15, 18, '6164255db272986fed036b117254a50765f4e895b7c2104d0af33e249849ffcc', '2025-12-17 04:19:09', '2025-12-17 05:19:09', NULL, '2025-12-17 04:19:19'),
+(16, 19, '2acd7bbb3c0494acbe7f42a52aa50215bbc13eb835bb4fd3ef8f517a0932b61e', '2025-12-17 04:34:37', '2025-12-17 05:34:37', NULL, NULL),
+(17, 19, '8109e53c325937277c6cfc5d09e6b56a8ccd776acc03a897b648d85543521ed4', '2025-12-17 04:36:36', '2025-12-17 05:36:36', NULL, NULL),
+(18, 19, 'f2b3e9c0f4732661320ad84edcff3efa821aa7ef88da624055792e5d8de7b3ef', '2025-12-17 04:45:15', '2025-12-17 05:45:15', NULL, NULL),
+(19, 19, 'cfbb863e9cd02e599964d944805c2eb70378c80ae575194905c371e549b4977d', '2025-12-17 04:45:38', '2025-12-17 05:45:38', NULL, NULL),
+(20, 19, 'f83a7acb1b4ccf20775b2bd9e47584cc416b0cdf14c6048005bfe52a0a9b3072', '2025-12-17 04:46:14', '2025-12-17 05:46:14', NULL, NULL),
+(21, 19, '935ca703c82585a445b6d8168934565ad73e9f0f9e850fa37c38c507519cb129', '2025-12-17 04:46:46', '2025-12-17 05:46:46', NULL, NULL),
+(22, 19, '1f66604b8fc4102875aa114e59d883df6296255abc82d21b6b8ae25b53415db8', '2025-12-17 20:40:52', '2025-12-17 21:40:52', '2025-12-17 20:47:15', NULL),
+(23, 19, 'e2892a3296dd0070e1e361d60351a2c111d8caf4bfb37367584453935f8e5dca', '2025-12-17 21:01:49', '2025-12-17 22:01:49', NULL, NULL),
+(24, 19, 'c30a31335a10dca2fadae2c1f3e4b6dfdd0269d356df2a7e0d3201549a6b3994', '2025-12-17 21:01:52', '2025-12-17 22:01:52', NULL, NULL),
+(25, 19, 'a80ece9eb7797ef7ca01be055edb84509fe34be9ee2929937508b165788f98d8', '2025-12-17 23:11:51', '2025-12-18 00:11:51', '2025-12-17 23:12:03', '2025-12-17 23:11:57');
 
 -- --------------------------------------------------------
 
@@ -222,15 +269,49 @@ INSERT INTO `mywork` (`courseId`, `author`, `workTitle`, `likes`, `category`, `i
 --
 
 CREATE TABLE `users` (
-  `userId` varchar(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
-  `passWord` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `userId` int NOT NULL,
+  `email` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
+  `passWord` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
   `role` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
   `deleteFlag` int NOT NULL COMMENT 'delete = 9, Otherwise = 0'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
+-- Dumping data for table `users`
+--
+
+INSERT INTO `users` (`userId`, `email`, `passWord`, `role`, `deleteFlag`) VALUES
+(17, 'tiana@gmail.com', '$2y$10$UymwsLKPHjl6/BS/Lb1.V.nk9jqH5NX7gTXn3LDdBWdUaYmL7S4Lu', 'teacher', 0),
+(18, 'matheus@gmail.com', '$2y$10$te52doExitpZRJ7GL4E6bOIvRRYICtRrTS56Nv3obgjQFGDoqH7u2', 'student', 0),
+(19, 'kenta@gmail.com', '$2y$10$4KkvJ6k3xi9OuhanoxjfTOBfvK/HIfm5sVbmKAmlL.SSHVzO6motq', 'admin', 0),
+(20, 'kenta2@gmail.com', '$2y$10$CpK4vV0MzfrvGieFV6ZZm.zxDa3atGcXgVoiO9oqcq5zo/iXYwTAi', 'admin', 0),
+(21, 'gustavo@gmail.com', '$2y$10$Sq3MEQGpoaO9QWbsBc4vZen0LkDXsF0wQ48C/EQp.hyopgSCaWv6q', 'student', 0),
+(22, 'gustafvo@gmail.com', '$2y$10$1CSZPUZxHWEgDXdBMLDTR.sUY7eogW8ft40LY1/l1.JVu3bc5zPsS', 'student', 0),
+(23, 'gusto@gmail.com', '$2y$10$QrLTsJlmhSYtUShAw6IAaOI6NuBSgOncU5DAhEXWTTpJ5h1PoezG6', 'admin', 0),
+(24, 'gust@gmail.com', '$2y$10$O5Uho/EmG6UXAan4QmgNvuBDjmVIbpbsAf8YKxUAqiqG0yG9KScgG', 'admin', 0),
+(25, 'gudst@gmail.com', '$2y$10$yjaUaWAdRrNE3ApWnLLnfOdIHM2aOE0DfyyLQUBK2NebRaFmtmIqi', 'admin', 0),
+(26, 'guddst@gmail.com', '$2y$10$qiOJtSQVEg5zQVRsbnxvJezIOWlBh4oprhV7IRzXFGR2PYMZF57.q', 'admin', 0),
+(27, 'guddast@gmail.com', '$2y$10$l97QM6exDlgUyY52cH0RvuuIat695mIm2MWXsgP83zA6JHVctKMJC', 'admin', 0),
+(28, 'guvrt@gmail.com', '$2y$10$g./L9pqtt047zGtRynU8eOLZ8yuqvV.VJ0yUq/JoO4qezJHDySgRS', 'admin', 0),
+(29, 'guvrbert@gmail.com', '$2y$10$K9WuDniQUWQE2CsuDcTW4e8vpX5ogIz84b8HE9SQo1I4k6l820jZy', 'admin', 0),
+(30, 'guvrberbbtert@gmail.com', '$2y$10$OUzaelX3pcIGOUAGRKDuMevwNBC1puKybWa/jW/trnfg7yQGXC4ha', 'student', 0),
+(31, 'guvrbebsrfrbbtert@gmail.com', '$2y$10$Jd2xAP3cqLImnBU71ZNCZ.MZIuXFU1U.pl1MMALKW8szuqM/PG1ry', 'student', 0),
+(32, 'guvrbebsrfrvrwvbbtert@gmail.com', '$2y$10$VT8ca97EveBqMhZV.voczOid.G9xUmrHMyDf6ItXtTl6MlsfdGaN6', 'admin', 0),
+(33, 'guvrbebebrsrfrvrwvbbtert@gmail.com', '$2y$10$S9Xx7GDGq3SJaZt7l.CoYuCyHuSMjMdnSxOmzE.03qi4g8OTqu6X.', 'admin', 0),
+(34, 'guvrbebebrsrfrvrberwvbbtert@gmail.com', '$2y$10$hDb0zIoTEb1ZJhWgKJQ6DuS.8hwTfy9dxjZKEz1Tc7cit3ZlpHAP6', 'student', 0),
+(35, 'guvrbebebvwrsrfrvrberwvbbtert@gmail.com', '$2y$10$Nxl/iDuZvgKRwhDkH6Neou41h85qJvbPJ3SuZ8vDJ60tQh.D2rvc.', 'admin', 0);
+
+--
 -- Indexes for dumped tables
 --
+
+--
+-- Indexes for table `api_token`
+--
+ALTER TABLE `api_token`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uniq_token_hash` (`token_hash`),
+  ADD KEY `idx_user_id` (`userId`);
 
 --
 -- Indexes for table `courses`
@@ -257,8 +338,30 @@ ALTER TABLE `users`
   ADD PRIMARY KEY (`userId`);
 
 --
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
+-- AUTO_INCREMENT for table `api_token`
+--
+ALTER TABLE `api_token`
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
+
+--
+-- AUTO_INCREMENT for table `users`
+--
+ALTER TABLE `users`
+  MODIFY `userId` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=36;
+
+--
 -- Constraints for dumped tables
 --
+
+--
+-- Constraints for table `api_token`
+--
+ALTER TABLE `api_token`
+  ADD CONSTRAINT `fk_tokens_user` FOREIGN KEY (`userId`) REFERENCES `users` (`userId`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `coursesdetail`
