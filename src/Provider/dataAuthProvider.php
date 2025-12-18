@@ -20,6 +20,7 @@ class DataAuthProvider implements AuthProviderInterface
         try {
             $errFlag = false;
             $db = new \mysqli(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
+            $userid = require_auth($db);
             if ($db->connect_error) {
                 throw new \Exception("DB error: " . $db->connect_error, 500);
             }
@@ -236,9 +237,34 @@ class DataAuthProvider implements AuthProviderInterface
         return $userData["role"];
     }
 
-    public function getCurrentUser(): ?array
+    public function getCurrentUser(int $userId): ?array
     {
-        return [];
+        try{
+            $db = new \mysqli(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
+            if ($db->connect_error) {
+                throw new \Exception("Connection issue.", 500);
+            }
+            $getUser = $db->prepare("SELECT id, email, role FROM users WHERE id = ? LIMIT 1");
+            $getUser->bind_param("i", $userId);
+            $getUser->execute();
+            $userData = $getUser->get_result();
+            if ($userData->num_rows === 0) {
+                throw new \Exception("User not found.", 404);
+            }
+            $userInfo = $userData->fetch_assoc();
+
+            $getUser->close();
+            $db->close();
+
+            return [
+                'id' => $userInfo['id'],
+                'email' => $userInfo['email'],
+                'role' => $userInfo['role']
+            ];
+
+        }catch(\Exception $e){
+                throw new \Exception($e->getMessage(), $e->getCode());
+        }
     }
 }
 ?>

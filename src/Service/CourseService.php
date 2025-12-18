@@ -3,6 +3,7 @@
   namespace App\Services;
   use App\Interface\CourseProviderInterface;
   use App\Model\Course;
+  use App\Services\AuditService;
   class CourseService{
     private CourseProviderInterface $provider;
 
@@ -41,6 +42,10 @@
     }
     function deleteCourse(string $courseId): bool{
       return $this->provider->deleteCourse($courseId);
+    }
+
+    function getcoursedetailByCategory(string $category): array{
+      return $this->provider->getcoursedetailByCategory($category);
     }
     
   }

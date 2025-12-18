@@ -40,8 +40,16 @@
             return $this->currentUser !== null;
         }
 
-        public function getCurrentUser(): ?array{
+        public function getCurrentUser(int $userId): ?array{
             return $this->currentUser;
+        }
+
+        public function registerUser($email, $password, $role, $deleteFlag = 0): void{
+            $this->users[] = [
+                'email' => $email,
+                'password' => password_hash($password, PASSWORD_BCRYPT),
+                'role' => $role
+            ];
         }
     }
 
