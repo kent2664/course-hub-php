@@ -54,7 +54,7 @@
     $myworkProvider = new DbMyWorkProvider($pdo);
     $myworkService = new MyWorkService($myworkProvider, $authService);
     $auditService = new AuditService();
-    $courseProvider = new dataCourseProvider($auditService);
+    $courseProvider = new dataCourseProvider();
     // $courseProvider = new InMemoryCourseProvider();
     $courseService = new CourseService($courseProvider); //connecting the implementor class which implements the interface to the class which consumes the interface.
 
@@ -166,10 +166,7 @@ try {
                         : '';
 
                     if ($courseId === '' || $grade === '') {
-                        echo json_encode([
-                            "success" => false,
-                            "message" => "Invalid grading request. courseId and grade are required."
-                        ]);
+                        Response::json([],403,"Invalid grading request. courseId and grade are required.");
                         break;
                     }
 

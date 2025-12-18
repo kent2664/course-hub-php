@@ -11,8 +11,8 @@
         private AuditService $auditService;
 
         private array $courses = [];
-        public function __construct(AuditService $auditService){
-            $this->auditService = $auditService;
+        public function __construct(){
+            $this->auditService = new AuditService();
         }
 
 
