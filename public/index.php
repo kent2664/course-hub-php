@@ -76,40 +76,27 @@ try {
 
                     // 2. query (JSON)
                     header('Content-Type: application/json');
-                    $currentUser = $_SESSION["email"] ?? 'unknown';
-
+                    
                     checkKeys("author");
                     if(isset($_GET["author"])){
                          // 2-1 Filter by Author: Handles requests like /mywork?author=Alice
                         $author = htmlspecialchars($_GET["author"], ENT_QUOTES, 'UTF-8'); // Sanitize input to prevent XSS/injection attacks.
                         $data = $myworkService->getWorkByAuthor($author); 
-                        Response::json($data, 200,"Success to course serching.");
-                        echo json_encode([
-                            "success" => true,
-                            "data" => $data,
-                            "message" => "My work data filtered by {$author}"
-                        ]);                    
+                        Response::json($data, 200,"Success to course serching. with author filter". $author);
+             
                     } else {
                         $data = $myworkService->getAllWork();
-                        echo json_encode([
-                            "success" => true,
-                            "data" => $data,
-                            "message" => "Your own MyWork data ({$currentUser})"
-                        ]);
+                        Response::json($data, 200,"Success to course serching.");
                     }
                 break;
-
                 case "authme":
                     $authProvider->isAuthenticated();
                     break;
                 case "courses":
                     //implement the feature that takes course info with $courseService
-                    echo "called ";
                     Response::json($courseService->getCourseList(), 200, "Course list fetched successfully.");
                 break;
                 case "searchcourse":
-                    //login check needed
-                    $authService->status();//check login status
 
                     checkKeys("target", "searchtxt");
                     //implement the feature that takes course info with $courseService
@@ -119,6 +106,16 @@ try {
                     $searchtxt = $_REQUEST["searchtxt"];
                     Response::json($courseService->searchCourseList($target, $searchtxt), 200, "Search results for '$searchtxt' in '$target'.");
                 break;
+                case "searchByCategory":
+                    if(!$authProvider->isAdmin()){
+                           Response::json([],400,"Not authorized");
+                    }
+                    checkKeys("category");
+                    //implement the feature that takes course info with $courseService
+  
+                    //sanitize input
+                    $category = $_REQUEST["category"];
+                    Response::json($courseService->getcoursedetailByCategory($category), 200, "Courses fetched for category '$category'.");
                 default: {
                     Response::json([], 404, "Endpoint not found.");
 
@@ -156,18 +153,9 @@ try {
                     checkKeys("courseId","grade");
                     header('Content-Type: application/json');
                     //1. Check login permissions
-                    // $statusInfo = $authService->statusDetail();
-                    // if (
-                    //     !$statusInfo['logged_in'] ||
-                    //     !in_array($statusInfo['role'], ['admin','teacher'], true)
-                    // ) {
-                    //     http_response_code(401); // fail 401[web:8]
-                    //     echo json_encode([
-                    //         "success" => false,
-                    //         "message" => "Only admin or teacher can update grades."
-                    //     ]);
-                    //     break;
-                    // }
+                    if(!$authProvider->isTeacher()){
+                           Response::json([],400,"Not authorized");
+                    }
 
                     // 2. Filtering (courseId, grade)
                     $courseId = isset($_POST['courseId'])
@@ -188,12 +176,14 @@ try {
                     // 3. DB update
                     $updatedWork = $myworkService->updateGrade($courseId, $grade);
                     
-                    Response::json($updatedWork, 200,"Success to serching.");
+                    Response::json($updatedWork, 200,"Success to graded.");
 
                     break;
                 case "insertcourse":
-                    //login check needed
-                    //$authService->status();//check login status
+                    //check login status
+                    if(!$authProvider->isAdmin()){
+                           Response::json([],400,"Not authorized");
+                    }
                     //sanitize input
                     checkKeys("id", "author", "title", "category", "rating", "hours", "level", "image");
                     $courseData = new Course(
@@ -209,7 +199,10 @@ try {
                     Response::json($courseService->insertCourse($courseData), 200, "Course inserted successfully.");
                 break;
                 case "updatecourse":
-                    $authService->status();//check login status
+                    //check login status
+                    if(!$authProvider->isAdmin()){
+                           Response::json([],400,"Not authorized");
+                    }
                     //sanitize input
                     checkKeys("id", "author", "title", "category", "rating", "hours", "level", "image");
 
@@ -226,6 +219,9 @@ try {
                     Response::json($courseService->updateCourse($courseData), 200, "Course updated successfully.");
                 break;
                 case "deletecourse":
+                    if(!$authProvider->isAdmin()){
+                           Response::json([],400,"Not authorized");
+                    }
                     $authService->status();//check login status
                     checkKeys("id");
                     Response::json($courseService->deleteCourse($_REQUEST["id"]), 200, "Course deleted successfully.");

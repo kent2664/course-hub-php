@@ -3,15 +3,18 @@
 namespace App\MyWork;
 
 use App\Interface\MyWorkProviderInterface;
+use App\Services\AuditService;
 use PDO; //Imports PHP’s built-in PDO class for database access (PHP Data Objects)
 
 class DbMyWorkProvider implements MyWorkProviderInterface //Defines a database-based provider class that implements the interface
 {
+    private AuditService $auditService;
     private PDO $pdo; //Private property to store the PDO database connection
 
     public function __construct(PDO $pdo) //Constructor that receives a PDO object (dependency injection)/ __(ㅡMagic Method: PHP calls automatically)
     {
         $this->pdo = $pdo; //Stores the passed PDO object in the class property
+         $this->auditService = new AuditService();
     }
 
     // Filter by author
