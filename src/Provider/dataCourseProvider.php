@@ -127,6 +127,7 @@
             try{
                 //buid database connection
                 $db = new \mysqli(DB_SERVER,DB_USER,DB_PASS,DB_NAME);
+                $userid = require_auth($db);
                 if($db->connect_error)
                     throw new \Exception("Connection issue.",500);
                 //prepare insert statement
@@ -157,10 +158,10 @@
                 if($insertCourse->affected_rows === 0)  throw new \Exception("Data insert faild.",500);
                 $insertCourse->close();
                 $db->close();
-                $this->auditService->outputLog($_SESSION["username"], true, "Successfully inserted course with ID: " . $id);
+                $this->auditService->outputLog($userid, true, "Successfully inserted course ");
                 return true;
             }catch(\Exception $e){
-                $this->auditService->outputLog($_SESSION["username"], false, "Failed to insert course with ID: " . $id);
+                $this->auditService->outputLog($userid, false, "Failed to insert course");
                 throw new \Exception($e->getMessage(), $e->getCode());
             }
 
@@ -173,6 +174,7 @@
             try{
                 //buid database connection
                 $db = new \mysqli(DB_SERVER,DB_USER,DB_PASS,DB_NAME);
+                $userid = require_auth($db);
                 if($db->connect_error)
                     throw new \Exception("Connection issue.",500);
                 //prepare update statement if the value is not null use it otherwise keep the old value
@@ -204,10 +206,10 @@
                 $updateCourse->close();
                 $db->close();
 
-                $this->auditService->outputLog($_SESSION["username"], true, "Successfully updated course with ID: " . $id);
+                $this->auditService->outputLog($userid, true, "Successfully updated course with ID: " . $id);
                 return $updateData;
             }catch(\Exception $e){
-                    $this->auditService->outputLog($_SESSION["username"], false, "Failed to update course with ID: " . $id);
+                    $this->auditService->outputLog($userid, false, "Failed to update course with ID: " . $id);
                     throw new \Exception($e->getMessage(), $e->getCode());
             }
         }
@@ -219,6 +221,7 @@
 
                 //buid database connection
                 $db = new \mysqli(DB_SERVER,DB_USER,DB_PASS,DB_NAME);
+                $userid = require_auth($db);
                 if($db->connect_error)
                     throw new Exception("Connection issue.",500);
                 //prepare update statement if the value is not null use it otherwise keep the old value
@@ -233,11 +236,11 @@
                 $deleteCourse->close();
                 $db->close();
 
-                $this->auditService->outputLog($_SESSION["username"], true, "Successfully deleted course with ID: " . $courseId);
+                $this->auditService->outputLog($userid, true, "Successfully deleted course with ID: " . $courseId);
 
                 return $deleteData;
             }catch(\Exception $e){
-                $this->auditService->outputLog($_SESSION["username"], false, "Failed to delete course with ID: " . $courseId);
+                $this->auditService->outputLog($userid, false, "Failed to delete course with ID: " . $courseId);
                 throw new \Exception($e->getMessage(), $e->getCode());
             }
         }

@@ -13,7 +13,7 @@ class Response {
             "data" => $data
         ];
 
-        if (empty($data) && !is_array($data)) { 
+        if ($data == []) { 
             unset($response['data']); 
         }
 
