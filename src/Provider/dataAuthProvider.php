@@ -20,6 +20,7 @@ class DataAuthProvider implements AuthProviderInterface
         try {
             $errFlag = false;
             $db = new \mysqli(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
+            $userid = require_auth($db);
             if ($db->connect_error) {
                 throw new \Exception("DB error: " . $db->connect_error, 500);
             }
@@ -37,9 +38,13 @@ class DataAuthProvider implements AuthProviderInterface
                     $errFlag = true;
             }
             $db->close();
-            if (!$errFlag)
+            
+            if (!$errFlag){
+                $this->auditService->outputLog($userid, true, "Successfully inserted user with email: " . $email);
                 Response::json([], 200, "Record Added");
-            else {
+
+            }else {
+                $this->auditService->outputLog($userid, false, "Failed to insert user with email: " . $email);
                 throw new \Exception("Record insertion failed.", 400);
             }
         } catch (\Exception $err) {

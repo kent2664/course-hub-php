@@ -5,3 +5,5 @@
 [2025-12-17 20:22:09] | IP: ::1 | EMAIL: kenta21@gmail.com | ACTION: LOGIN ATTEMPT | STATUS: SUCCESS | USER ID: 36
 [2025-12-18 04:22:18] | USERID: 36 | STATUS: FAILED | MESSAGE: Failed to insert course
 [2025-12-18 04:22:54] | USERID: 36 | STATUS: SUCCESS | MESSAGE: Successfully inserted course 
+[2025-12-18 04:31:31] | USERID: 36 | STATUS: SUCCESS | MESSAGE: Successfully inserted user with email: kenta212@gmail.com
+[2025-12-18 04:33:38] | USERID: 36 | STATUS: SUCCESS | MESSAGE: Successfully inserted user with email: kenta212@gmail.com
