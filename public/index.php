@@ -54,7 +54,7 @@
     $myworkProvider = new DbMyWorkProvider($pdo);
     $myworkService = new MyWorkService($myworkProvider, $authService);
     $auditService = new AuditService();
-    $courseProvider = new dataCourseProvider($auditService);
+    $courseProvider = new dataCourseProvider();
     // $courseProvider = new InMemoryCourseProvider();
     $courseService = new CourseService($courseProvider); //connecting the implementor class which implements the interface to the class which consumes the interface.
 
@@ -76,40 +76,27 @@ try {
 
                     // 2. query (JSON)
                     header('Content-Type: application/json');
-                    $currentUser = $_SESSION["email"] ?? 'unknown';
-
+                    
                     checkKeys("author");
                     if(isset($_GET["author"])){
                          // 2-1 Filter by Author: Handles requests like /mywork?author=Alice
                         $author = htmlspecialchars($_GET["author"], ENT_QUOTES, 'UTF-8'); // Sanitize input to prevent XSS/injection attacks.
                         $data = $myworkService->getWorkByAuthor($author); 
-                        Response::json($data, 200,"Success to course serching.");
-                        echo json_encode([
-                            "success" => true,
-                            "data" => $data,
-                            "message" => "My work data filtered by {$author}"
-                        ]);                    
+                        Response::json($data, 200,"Success to course serching. with author filter". $author);
+             
                     } else {
                         $data = $myworkService->getAllWork();
-                        echo json_encode([
-                            "success" => true,
-                            "data" => $data,
-                            "message" => "Your own MyWork data ({$currentUser})"
-                        ]);
+                        Response::json($data, 200,"Success to course serching.");
                     }
                 break;
-
                 case "authme":
                     $authProvider->isAuthenticated();
                     break;
                 case "courses":
                     //implement the feature that takes course info with $courseService
-                    echo "called ";
                     Response::json($courseService->getCourseList(), 200, "Course list fetched successfully.");
                 break;
                 case "searchcourse":
-                    //login check needed
-                    $authService->status();//check login status
 
                     checkKeys("target", "searchtxt");
                     //implement the feature that takes course info with $courseService
@@ -119,6 +106,16 @@ try {
                     $searchtxt = $_REQUEST["searchtxt"];
                     Response::json($courseService->searchCourseList($target, $searchtxt), 200, "Search results for '$searchtxt' in '$target'.");
                 break;
+                case "searchByCategory":
+                    if(!$authProvider->isAdmin()){
+                           Response::json([],400,"Not authorized");
+                    }
+                    checkKeys("category");
+                    //implement the feature that takes course info with $courseService
+  
+                    //sanitize input
+                    $category = $_REQUEST["category"];
+                    Response::json($courseService->getcoursedetailByCategory($category), 200, "Courses fetched for category '$category'.");
                 default: {
                     Response::json([], 404, "Endpoint not found.");
 
@@ -156,18 +153,9 @@ try {
                     checkKeys("courseId","grade");
                     header('Content-Type: application/json');
                     //1. Check login permissions
-                    // $statusInfo = $authService->statusDetail();
-                    // if (
-                    //     !$statusInfo['logged_in'] ||
-                    //     !in_array($statusInfo['role'], ['admin','teacher'], true)
-                    // ) {
-                    //     http_response_code(401); // fail 401[web:8]
-                    //     echo json_encode([
-                    //         "success" => false,
-                    //         "message" => "Only admin or teacher can update grades."
-                    //     ]);
-                    //     break;
-                    // }
+                    if(!$authProvider->isTeacher()){
+                           Response::json([],400,"Not authorized");
+                    }
 
                     // 2. Filtering (courseId, grade)
                     $courseId = isset($_POST['courseId'])
@@ -178,22 +166,21 @@ try {
                         : '';
 
                     if ($courseId === '' || $grade === '') {
-                        echo json_encode([
-                            "success" => false,
-                            "message" => "Invalid grading request. courseId and grade are required."
-                        ]);
+                        Response::json([],403,"Invalid grading request. courseId and grade are required.");
                         break;
                     }
 
                     // 3. DB update
                     $updatedWork = $myworkService->updateGrade($courseId, $grade);
                     
-                    Response::json($updatedWork, 200,"Success to serching.");
+                    Response::json($updatedWork, 200,"Success to graded.");
 
                     break;
                 case "insertcourse":
-                    //login check needed
-                    //$authService->status();//check login status
+                    //check login status
+                    if(!$authProvider->isAdmin()){
+                           Response::json([],400,"Not authorized");
+                    }
                     //sanitize input
                     checkKeys("id", "author", "title", "category", "rating", "hours", "level", "image");
                     $courseData = new Course(
@@ -209,29 +196,71 @@ try {
                     Response::json($courseService->insertCourse($courseData), 200, "Course inserted successfully.");
                 break;
                 case "updatecourse":
-                    $authService->status();//check login status
-                    //sanitize input
-                    checkKeys("id", "author", "title", "category", "rating", "hours", "level", "image");
 
-                    $courseData = new Course(
-                            $_REQUEST["id"],
-                            $_REQUEST["author"] == "" ? NULL: $_REQUEST["author"],
-                            $_REQUEST["title"] == "" ? NULL: $_REQUEST["title"],
-                            $_REQUEST["category"]== "" ? NULL: $_REQUEST["category"],
-                            $_REQUEST["rating"]== "" ? NULL: $_REQUEST["rating"],
-                            $_REQUEST["hours"]== "" ? NULL: $_REQUEST["hours"],
-                            $_REQUEST["level"]== "" ? NULL: $_REQUEST["level"],
-                            $_REQUEST["image"]== "" ? NULL: $_REQUEST["image"]
-                        );
-                    Response::json($courseService->updateCourse($courseData), 200, "Course updated successfully.");
-                break;
                 case "deletecourse":
+                    if(!$authProvider->isAdmin()){
+                           Response::json([],400,"Not authorized");
+                    }
                     $authService->status();//check login status
                     checkKeys("id");
                     Response::json($courseService->deleteCourse($_REQUEST["id"]), 200, "Course deleted successfully.");
                 break;
             }
             break;
+        case "PUT":
+            switch (basename($_SERVER["PATH_INFO"])) {
+                case "updatecourse":
+
+                //check login status
+                    if(!$authProvider->isAdmin()){
+                           Response::json([],400,"Not authorized");
+                    }
+                    //sanitize input
+                    //checkKeys("id", "author", "title", "category", "rating", "hours", "level", "image");
+                    $json = file_get_contents('php://input');
+
+                    // Decode the JSON data into an associative array
+                    $data = json_decode($json, true);
+
+                    force_array_keys($data, ["id", "author", "title", "category", "rating", "hours", "level", "image"]);
+
+                    $courseData = new Course(
+                            $data["id"],
+                            $data["author"] == "" ? NULL: $data["author"],
+                            $data["title"] == "" ? NULL: $data["title"],
+                            $data["category"]== "" ? NULL: $data["category"],
+                            $data["rating"]== "" ? NULL: $data["rating"],
+                            $data["hours"]== "" ? NULL: $data["hours"],
+                            $data["level"]== "" ? NULL: $data["level"],
+                            $data["image"]== "" ? NULL: $data["image"]
+                        );
+                    Response::json($courseService->updateCourse($courseData), 200, "Course updated successfully.");
+                break;
+                default:
+                    Response::json([], 404, "Endpoint not found.");
+                break;
+            }
+        break;
+        case "DELETE":
+            switch (basename($_SERVER["PATH_INFO"])) {
+                case "deletecourse":
+                    if(!$authProvider->isAdmin()){
+                           Response::json([],400,"Not authorized");
+                    }
+                    $json = file_get_contents('php://input');
+
+                    // Decode the JSON data into an associative array
+                    $data = json_decode($json, true);
+
+                    force_array_keys($data, ["id"]);
+
+                    Response::json($courseService->deleteCourse($data["id"]), 200, "Course deleted successfully.");
+                break;
+                default:
+                    Response::json([], 404, "Endpoint not found.");
+                    break;
+            }
+        break;
 
     }
 } catch (Exception $err) {
