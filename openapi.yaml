@@ -1,0 +1,232 @@
+openapi: 3.0.0
+info:
+  title: Course-Hub API
+  description: This is a PHP backend application for Course-Hub. It includes functions to manage course and user information.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost/course-hub-php/public/index.php
+    description: Local development server
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: "Bearer token for authentication"
+
+  schemas:
+    Course:
+      type: object
+      required:
+        - id
+        - author
+        - title
+        - category
+        - rating
+        - hours
+        - level
+        - image
+      properties:
+        id:
+          type: string
+        author:
+          type: string
+        title:
+          type: string
+        category:
+          type: string
+        rating:
+          type: string
+        hours:
+          type: string
+        level:
+          type: string
+        image:
+          type: string
+          description: "Base64 string or image path"
+
+paths:
+  # --- GET Methods ---
+  /logout:
+    get:
+      tags: [Auth]
+      summary: Logout user
+      responses:
+        200:
+          description: Successfully logged out.
+
+  /mywork:
+    get:
+      tags: [MyWork]
+      summary: Get works by author or all works
+      parameters:
+        - name: author
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        200:
+          description: Success to course searching.
+
+  /authme:
+    get:
+      tags: [Auth]
+      summary: Check current authentication status
+      responses:
+        200:
+          description: Authenticated.
+
+  /courses:
+    get:
+      tags: [Course]
+      summary: Get full course list
+      responses:
+        200:
+          description: Course list fetched successfully.
+
+  /searchcourse:
+    get:
+      tags: [Course]
+      summary: Search courses
+      parameters:
+        - name: target
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: searchtxt
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Search results returned.
+
+  /searchByCategory:
+    get:
+      tags: [Course]
+      summary: Get courses by category (Admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: category
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Courses fetched for category.
+        400:
+          description: Not authorized.
+
+  # --- POST Methods ---
+  /register:
+    post:
+      tags: [Auth]
+      summary: Register a new user
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string }
+                password: { type: string }
+                role: { type: string, default: student, enum: [student, teacher, admin] }
+      responses:
+        200:
+          description: User registered.
+
+  /login:
+    post:
+      tags: [Auth]
+      summary: User login
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string }
+                password: { type: string }
+      responses:
+        200:
+          description: Login successful.
+
+  /mywork-grading:
+    post:
+      tags: [MyWork]
+      summary: Grade a work (Teacher only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [courseId, grade]
+              properties:
+                courseId: { type: string }
+                grade: { type: string }
+      responses:
+        200:
+          description: Success to graded.
+
+  /insertcourse:
+    post:
+      tags: [Course]
+      summary: Insert a new course (Admin only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Course'
+      responses:
+        200:
+          description: Course inserted successfully.
+
+  # --- PUT Method ---
+  /updatecourse:
+    put:
+      tags: [Course]
+      summary: Update course details (Admin only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: Requires JSON body (force_array_keys check)
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Course'
+      responses:
+        200:
+          description: Course updated successfully.
+
+  # --- DELETE Method ---
+  /deletecourse:
+    delete:
+      tags: [Course]
+      summary: Delete a course (Admin only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id]
+              properties:
+                id: { type: string }
+      responses:
+        200:
+          description: Course deleted successfully.

@@ -26,3 +26,5 @@ This is a PHP backend application for Course-Hub. It includes functions to manag
 
 ### Main endpoints
 
+[openapi.yaml](openapi.yaml)
+
