@@ -10,7 +10,6 @@
     require __DIR__ . '/../src/Service/AuditService.php';
     require __DIR__ . '/../src/validation.php';
     require __DIR__ . '/../src/Common/Response.php';
-    require __DIR__ . '/../src/Service/Functions.php';
     require __DIR__ . '/../src/Provider/dataAuthProvider.php';
 
     require __DIR__ . '/../src/Service/webconfig.php';
@@ -21,7 +20,7 @@
     require __DIR__.'/../src/Provider/DbMyWorkProvider.php'; //data processing
     require __DIR__.'/../src/Service/MyWorkService.php';//business logic
     
-    use App\Auth\InMemoryAuthProvider;
+
     //use App\Course\InMemoryCourseProvider;
     use App\Course\dataCourseProvider;
     use App\Services\AuthService;
@@ -50,10 +49,12 @@
     // error_reporting(E_ALL);
     // ini_set("display_errors", 1);
    
+
     //define course service with provider
     $myworkProvider = new DbMyWorkProvider($pdo);
     $myworkService = new MyWorkService($myworkProvider, $authService);
-    $courseProvider = new dataCourseProvider();
+    $auditService = new AuditService();
+    $courseProvider = new dataCourseProvider($auditService);
     // $courseProvider = new InMemoryCourseProvider();
     $courseService = new CourseService($courseProvider); //connecting the implementor class which implements the interface to the class which consumes the interface.
 
@@ -98,13 +99,12 @@ try {
                     }
                 break;
 
-                    break;
                 case "authme":
                     $authProvider->isAuthenticated();
                     break;
                 case "courses":
                     //implement the feature that takes course info with $courseService
-                    //echo "called ";
+                    echo "called ";
                     Response::json($courseService->getCourseList(), 200, "Course list fetched successfully.");
                 break;
                 case "searchcourse":
@@ -193,7 +193,7 @@ try {
                     break;
                 case "insertcourse":
                     //login check needed
-                    $authService->status();//check login status
+                    //$authService->status();//check login status
                     //sanitize input
                     checkKeys("id", "author", "title", "category", "rating", "hours", "level", "image");
                     $courseData = new Course(

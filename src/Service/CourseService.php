@@ -43,6 +43,10 @@
     function deleteCourse(string $courseId): bool{
       return $this->provider->deleteCourse($courseId);
     }
+
+    function getcoursedetailByCategory(string $category): array{
+      return $this->provider->getcoursedetailByCategory($category);
+    }
     
   }
 

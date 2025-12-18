@@ -4,8 +4,7 @@
     
     use App\Interface\CourseProviderInterface;
     use App\Model\Course;
-
-    require __DIR__.'/../Service/webconfig.php';
+    use App\Services\AuditService;
 
     class dataCourseProvider implements CourseProviderInterface{
 
@@ -239,6 +238,25 @@
                 return $deleteData;
             }catch(\Exception $e){
                 $this->auditService->outputLog($_SESSION["username"], false, "Failed to delete course with ID: " . $courseId);
+                throw new \Exception($e->getMessage(), $e->getCode());
+            }
+        }
+
+        public function getcoursedetailByCategory(string $category): array{
+            try{
+                $db = new \mysqli(DB_SERVER,DB_USER,DB_PASS,DB_NAME);
+                if($db->connect_error)
+                    throw new \Exception("Connection issue.",500);
+                $loadCourse = $db->prepare("SELECT * FROM courses INNER JOIN coursesdetail ON courses.id = coursesdetail.id WHERE category = ? LIMIT 100");
+                $loadCourse->bind_param("s", $category);
+                $loadCourse->execute();
+                $userData = $loadCourse->get_result();
+                if($userData->num_rows === 0) throw new \Exception("No courses found in this category.",404);
+                $loadCourse->close();
+                $db->close();
+                
+                return $userData->fetch_assoc();
+            }catch(\Exception $e){
                 throw new \Exception($e->getMessage(), $e->getCode());
             }
         }
